@@ -230,13 +230,6 @@ ifeq ($(MCU_SUB_VARIANT), nrf52840)
 INC += -I./drivers/usb
 INC += -I../../lib/tinyusb/src
 
-
-# If SoftDevice is selected.
-ifneq ($(SD), )
-# For external tinyusb drivers to enable SoftDevice mode.
-CFLAGS += -DSOFTDEVICE_PRESENT
-endif
-
 SRC_C += $(addprefix drivers/usb/,\
 	usb_cdc.c \
 	usb_descriptors.c \
@@ -351,29 +344,15 @@ deploy: $(BUILD)/$(OUTPUT_FILENAME).hex
 
 endif
 
-sd: $(BUILD)/$(OUTPUT_FILENAME).hex
-	nrfjprog --eraseall -f $(MCU_VARIANT)
-	nrfjprog --program $(SOFTDEV_HEX) -f $(MCU_VARIANT)
-	nrfjprog --program $< --sectorerase -f $(MCU_VARIANT)
-	nrfjprog --reset -f $(MCU_VARIANT)
-
 else ifeq ($(FLASHER), pyocd)
 
 deploy: $(BUILD)/$(OUTPUT_FILENAME).hex
-	pyocd-flashtool -t $(MCU_VARIANT) $<
-
-sd: $(BUILD)/$(OUTPUT_FILENAME).hex
-	pyocd-flashtool -t $(MCU_VARIANT) --chip_erase
-	pyocd-flashtool -t $(MCU_VARIANT) $(SOFTDEV_HEX)
 	pyocd-flashtool -t $(MCU_VARIANT) $<
 
 else ifeq ($(FLASHER), idap)
 
 deploy: $(BUILD)/$(OUTPUT_FILENAME).hex
 	IDAPnRFPRog $<
-
-sd: $(BUILD)/$(OUTPUT_FILENAME).hex
-	IDAPnRFPRog $(SOFTDEV_HEX) $<
 
 else ifeq ($(FLASHER), bmp)
 
@@ -386,21 +365,6 @@ deploy: $(BUILD)/$(OUTPUT_FILENAME).elf
 	    -ex 'monitor swdp_scan' \
 	    -ex 'attach 1' \
 	    -ex 'set mem inaccessible-by-default off' \
-	    -ex 'load' \
-	    -ex 'kill' \
-	    -ex 'quit' \
-	    $<
-
-sd: $(BUILD)/$(OUTPUT_FILENAME).elf
-	$(Q)$(GDB) \
-	    -ex 'target extended-remote $(BMP_PORT)' \
-	    -ex 'monitor tpwr enable' \
-	    -ex 'monitor swdp_scan' \
-	    -ex 'attach 1' \
-	    -ex 'set mem inaccessible-by-default off' \
-	    -ex 'monitor erase_mass' \
-	    -ex 'load' \
-	    -ex 'file $(SOFTDEV_HEX)' \
 	    -ex 'load' \
 	    -ex 'kill' \
 	    -ex 'quit' \
