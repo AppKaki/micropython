@@ -4,7 +4,7 @@
  * The MIT License (MIT)
  *
  * Copyright (c) 2013, 2014 Damien P. George
- * Copyright (c) 2015 - 2018 Glenn Ruben Bakke
+ * Copyright (c) 2016 - 2018 Glenn Ruben Bakke
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,22 +25,30 @@
  * THE SOFTWARE.
  */
 
-#ifndef UART_H__
-#define UART_H__
+#include "py/builtin.h"
 
-#include "pin.h"
-#include "genhdr/pins.h"
-
-typedef struct _machine_hard_uart_obj_t machine_hard_uart_obj_t;
-extern const mp_obj_type_t machine_hard_uart_type;
-
-void uart_init0(void);
-void uart_deinit(void);
-void uart_irq_handler(mp_uint_t uart_id);
-
-bool uart_rx_any(const machine_hard_uart_obj_t * uart_obj);
-int uart_rx_char(const machine_hard_uart_obj_t * uart_obj);
-void uart_tx_strn(const machine_hard_uart_obj_t * uart_obj, const char *str, uint len);
-void uart_tx_strn_cooked(const machine_hard_uart_obj_t *uart_obj, const char *str, uint len);
-
+#if BLUETOOTH_SD
+#include "help_sd.h"
 #endif
+
+const char nrf5_help_text[] =
+"Welcome to MicroPython!\n"
+"\n"
+"For online help please visit http://micropython.org/help/.\n"
+"\n"
+"Quick overview of commands for the board:\n"
+#if MICROPY_HW_HAS_LED
+"  board.LED(n)    -- create an LED object for LED n (n=" HELP_TEXT_BOARD_LED ")\n"
+"\n"
+#endif
+#if BLUETOOTH_SD
+HELP_TEXT_SD
+#endif
+"Control commands:\n"
+"  CTRL-A        -- on a blank line, enter raw REPL mode\n"
+"  CTRL-B        -- on a blank line, enter normal REPL mode\n"
+"  CTRL-D        -- on a blank line, do a soft reset of the board\n"
+"  CTRL-E        -- on a blank line, enter paste mode\n"
+"\n"
+"For further help on a specific object, type help(obj)\n"
+;

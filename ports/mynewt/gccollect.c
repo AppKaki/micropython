@@ -3,7 +3,6 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2013-2015 Damien P. George
  * Copyright (c) 2016 Glenn Ruben Bakke
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -25,18 +24,29 @@
  * THE SOFTWARE.
  */
 
-#ifndef __MICROPY_INCLUDED_NRF5_MODMACHINE_H__
-#define __MICROPY_INCLUDED_NRF5_MODMACHINE_H__
+#include <stdio.h>
+#include <stdint.h>
 
-#include "py/mpstate.h"
-#include "py/nlr.h"
 #include "py/obj.h"
+#include "py/gc.h"
+#include "gccollect.h"
 
-void machine_init(void);
+static inline uintptr_t get_sp(void) {
+    uintptr_t result;
+    __asm__ ("mov %0, sp\n" : "=r" (result) );
+    return result;
+}
 
-MP_DECLARE_CONST_FUN_OBJ_VAR_BETWEEN(machine_info_obj);
-MP_DECLARE_CONST_FUN_OBJ_0(machine_reset_obj);
-MP_DECLARE_CONST_FUN_OBJ_0(machine_lightsleep_obj);
-MP_DECLARE_CONST_FUN_OBJ_0(machine_deepsleep_obj);
+void gc_collect(void) {
+    // start the GC
+    gc_collect_start();
 
-#endif // __MICROPY_INCLUDED_NRF5_MODMACHINE_H__
+    // Get stack pointer
+    uintptr_t sp = get_sp();
+
+    // trace the stack, including the registers (since they live on the stack in this function)
+    gc_collect_root((void**)sp, ((uint32_t)&_ram_end - sp) / sizeof(uint32_t));
+
+    // end the GC
+    gc_collect_end();
+}

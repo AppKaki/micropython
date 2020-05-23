@@ -3,7 +3,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2016-2018 Glenn Ruben Bakke
+ * Copyright (c) 2013, 2014 Damien P. George
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,6 +24,10 @@
  * THE SOFTWARE.
  */
 
-void pwm_init0(void);
+#include "py/runtime.h"
+#include "lib/oofatfs/ff.h"
 
-extern const mp_obj_type_t machine_hard_pwm_type;
+DWORD get_fattime(void) {
+    // TODO: Implement this function. For now, fake it.
+    return ((2016 - 1980) << 25) | ((12) << 21) | ((4) << 16) | ((00) << 11) | ((18) << 5) | (23 / 2);
+}
