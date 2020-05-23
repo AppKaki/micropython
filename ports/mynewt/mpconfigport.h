@@ -3,8 +3,8 @@
 #ifndef MYNEWT_MPCONFIGPORT_H__
 #define MYNEWT_MPCONFIGPORT_H__
 
-//  TODO #include <mpconfigboard.h>
-#include "boards/pinetime/mpconfigboard.h"  //
+#include <mpconfigboard.h>
+//#include "boards/pinetime/mpconfigboard.h"
 
 // options to control how MicroPython is built
 #ifndef MICROPY_VFS

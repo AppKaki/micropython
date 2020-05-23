@@ -1,30 +1,18 @@
 # Select the board to build for: if not given on the command line,
-# then default to pca10040.
-BOARD ?= pca10040
+# then default to pinetime.
+BOARD ?= pinetime
 ifeq ($(wildcard boards/$(BOARD)/.),)
 $(error Invalid BOARD specified)
 endif
-
-# If SoftDevice is selected, try to use that one.
-SD ?=
-SD_LOWER = $(shell echo $(SD) | tr '[:upper:]' '[:lower:]')
 
 # TODO: Verify that it is a valid target.
 
 include boards/$(BOARD)/mpconfigboard.mk
 
-ifeq ($(SD), )
-	# If the build directory is not given, make it reflect the board name.
-	BUILD ?= build-$(BOARD)
-	include ../../py/mkenv.mk
-else
-	# If the build directory is not given, make it reflect the board name.
-	BUILD ?= build-$(BOARD)-$(SD_LOWER)
-	include ../../py/mkenv.mk
-
-	LD_FILES += boards/$(SD_LOWER)_$(SOFTDEV_VERSION).ld
-	include drivers/bluetooth/bluetooth_common.mk
-endif
+# Add NimBLE to build
+BUILD ?= build-$(BOARD)
+include ../../py/mkenv.mk
+#### TODO include drivers/bluetooth/bluetooth_common.mk
 
 LD_FILES += boards/memory.ld boards/common.ld
 
@@ -40,8 +28,6 @@ QSTR_DEFS = qstrdefsport.h $(BUILD)/pins_qstr.h
 
 # include py core make definitions
 include ../../py/py.mk
-
-GIT_SUBMODULES = lib/nrfx lib/tinyusb
 
 MICROPY_VFS_FAT ?= 0
 MPY_CROSS = ../../mpy-cross/mpy-cross
