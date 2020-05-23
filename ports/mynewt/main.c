@@ -1,22 +1,92 @@
+/*
+ * This file is part of the MicroPython project, http://micropython.org/
+ *
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2013, 2014 Damien P. George
+ * Copyright (c) 2015 Glenn Ruben Bakke
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
-#include "py/compile.h"
-#include "py/runtime.h"
-#include "py/repl.h"
-#include "py/gc.h"
+#include "py/nlr.h"
 #include "py/mperrno.h"
+#include "py/lexer.h"
+#include "py/parse.h"
+#include "py/obj.h"
+#include "py/runtime.h"
+#include "py/stackctrl.h"
+#include "py/gc.h"
+#include "py/compile.h"
 #include "lib/utils/pyexec.h"
+#include "readline.h"
+#include "gccollect.h"
+#include "modmachine.h"
+#include "modmusic.h"
+#include "modules/uos/microbitfs.h"
+#include "led.h"
+#include "uart.h"
+#include "nrf.h"
+#include "pin.h"
+#include "spi.h"
+#include "i2c.h"
+#include "adc.h"
+#include "rtcounter.h"
+#if MICROPY_PY_MACHINE_HW_PWM
+#include "pwm.h"
+#endif
+#include "timer.h"
+#include "wdt.h"
 
-#if MICROPY_ENABLE_COMPILER
+#if BLUETOOTH_SD
+#include "nrf_sdm.h"
+#endif
+
+#if (MICROPY_PY_BLE_NUS)
+#include "ble_uart.h"
+#endif
+
+#if MICROPY_PY_MACHINE_SOFT_PWM
+#include "ticker.h"
+#include "softpwm.h"
+#endif
+
+#if MICROPY_HW_USB_CDC
+#include "usb_cdc.h"
+#endif
+
 void do_str(const char *src, mp_parse_input_kind_t input_kind) {
+    mp_lexer_t *lex = mp_lexer_new_from_str_len(MP_QSTR__lt_stdin_gt_, src, strlen(src), 0);
+    if (lex == NULL) {
+        printf("MemoryError: lexer could not allocate memory\n");
+        return;
+    }
+
     nlr_buf_t nlr;
     if (nlr_push(&nlr) == 0) {
-        mp_lexer_t *lex = mp_lexer_new_from_str_len(MP_QSTR__lt_stdin_gt_, src, strlen(src), 0);
         qstr source_name = lex->source_name;
-        mp_parse_tree_t parse_tree = mp_parse(lex, input_kind);
-        mp_obj_t module_fun = mp_compile(&parse_tree, source_name, true);
+        mp_parse_tree_t pn = mp_parse(lex, input_kind);
+        mp_obj_t module_fun = mp_compile(&pn, source_name, true);
         mp_call_function_0(module_fun);
         nlr_pop();
     } else {
@@ -24,52 +94,200 @@ void do_str(const char *src, mp_parse_input_kind_t input_kind) {
         mp_obj_print_exception(&mp_plat_print, (mp_obj_t)nlr.ret_val);
     }
 }
-#endif
 
-static char *stack_top;
-#if MICROPY_ENABLE_GC
-static char heap[2048];
-#endif
+extern uint32_t _heap_start;
+extern uint32_t _heap_end;
 
 int main(int argc, char **argv) {
-    int stack_dummy;
-    stack_top = (char*)&stack_dummy;
 
-    #if MICROPY_ENABLE_GC
-    gc_init(heap, heap + sizeof(heap));
-    #endif
+soft_reset:
+
+#if MICROPY_PY_MACHINE_WDT
+    wdt_init();
+#endif
+
+    led_init();
+
+    led_state(1, 1); // MICROPY_HW_LED_1 aka MICROPY_HW_LED_RED
+
+    mp_stack_set_top(&_ram_end);
+
+    // Stack limit should be less than real stack size, so we have a chance
+    // to recover from limit hit.  (Limit is measured in bytes.)
+    mp_stack_set_limit((char*)&_ram_end - (char*)&_heap_end - 400);
+
+    machine_init();
+
+    gc_init(&_heap_start, &_heap_end);
+
     mp_init();
-    #if MICROPY_ENABLE_COMPILER
-    #if MICROPY_REPL_EVENT_DRIVEN
-    pyexec_event_repl_init();
+    mp_obj_list_init(mp_sys_path, 0);
+    mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR_)); // current dir (or base dir of the script)
+    mp_obj_list_init(mp_sys_argv, 0);
+
+    pyb_set_repl_info(MP_OBJ_NEW_SMALL_INT(0));
+
+    readline_init0();
+
+
+#if MICROPY_PY_MACHINE_HW_SPI
+    spi_init0();
+#endif
+
+#if MICROPY_PY_MACHINE_I2C
+    i2c_init0();
+#endif
+
+#if MICROPY_PY_MACHINE_ADC
+    adc_init0();
+#endif
+
+#if MICROPY_PY_MACHINE_HW_PWM
+    pwm_init0();
+#endif
+
+#if MICROPY_PY_MACHINE_RTCOUNTER
+    rtc_init0();
+#endif
+
+#if MICROPY_PY_MACHINE_TIMER
+    timer_init0();
+#endif
+
+#if MICROPY_PY_MACHINE_UART
+    uart_init0();
+#endif
+
+#if (MICROPY_PY_BLE_NUS == 0) && (MICROPY_HW_USB_CDC == 0)
+    {
+        mp_obj_t args[2] = {
+            MP_OBJ_NEW_SMALL_INT(0),
+            MP_OBJ_NEW_SMALL_INT(115200),
+        };
+        MP_STATE_PORT(board_stdio_uart) = machine_hard_uart_type.make_new((mp_obj_t)&machine_hard_uart_type, MP_ARRAY_SIZE(args), 0, args);
+    }
+#endif
+
+pin_init0();
+
+#if MICROPY_MBFS
+    microbit_filesystem_init();
+#endif
+
+#if MICROPY_HW_HAS_SDCARD
+    // if an SD card is present then mount it on /sd/
+    if (sdcard_is_present()) {
+        // create vfs object
+        fs_user_mount_t *vfs = m_new_obj_maybe(fs_user_mount_t);
+        if (vfs == NULL) {
+            goto no_mem_for_sd;
+        }
+        vfs->str = "/sd";
+        vfs->len = 3;
+        vfs->flags = MP_BLOCKDEV_FLAG_FREE_OBJ;
+        sdcard_init_vfs(vfs);
+
+        // put the sd device in slot 1 (it will be unused at this point)
+        MP_STATE_PORT(fs_user_mount)[1] = vfs;
+
+        FRESULT res = f_mount(&vfs->fatfs, vfs->str, 1);
+        if (res != FR_OK) {
+            printf("MPY: can't mount SD card\n");
+            MP_STATE_PORT(fs_user_mount)[1] = NULL;
+            m_del_obj(fs_user_mount_t, vfs);
+        } else {
+            // TODO these should go before the /flash entries in the path
+            mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__slash_sd));
+            mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__slash_sd_slash_lib));
+
+            // use SD card as current directory
+            f_chdrive("/sd");
+        }
+        no_mem_for_sd:;
+    }
+#endif
+
+    // Main script is finished, so now go into REPL mode.
+    // The REPL mode can change, or it can request a soft reset.
+    int ret_code = 0;
+
+#if MICROPY_PY_BLE_NUS
+    ble_uart_init0();
+#endif
+
+#if MICROPY_PY_MACHINE_SOFT_PWM
+    ticker_init0();
+    softpwm_init0();
+#endif
+
+#if MICROPY_PY_MUSIC
+    microbit_music_init0();
+#endif
+#if BOARD_SPECIFIC_MODULES
+    board_modules_init0();
+#endif
+
+#if MICROPY_PY_MACHINE_SOFT_PWM
+    ticker_start();
+    pwm_start();
+#endif
+
+led_state(1, 0);
+
+#if MICROPY_VFS || MICROPY_MBFS || MICROPY_MODULE_FROZEN
+    // run boot.py and main.py if they exist.
+    pyexec_file_if_exists("boot.py");
+    pyexec_file_if_exists("main.py");
+#endif
+
+#if MICROPY_HW_USB_CDC
+    usb_cdc_init();
+#endif
+
     for (;;) {
-        int c = mp_hal_stdin_rx_chr();
-        if (pyexec_event_repl_process_char(c)) {
-            break;
+        if (pyexec_mode_kind == PYEXEC_MODE_RAW_REPL) {
+            if (pyexec_raw_repl() != 0) {
+                break;
+            }
+        } else {
+            ret_code = pyexec_friendly_repl();
+            if (ret_code != 0) {
+                break;
+            }
         }
     }
-    #else
-    pyexec_friendly_repl();
-    #endif
-    //do_str("print('hello world!', list(x+1 for x in range(10)), end='eol\\n')", MP_PARSE_SINGLE_INPUT);
-    //do_str("for i in range(10):\r\n  print(i)", MP_PARSE_FILE_INPUT);
-    #else
-    pyexec_frozen_module("frozentest.py");
-    #endif
+
     mp_deinit();
+
+    printf("MPY: soft reboot\n");
+
+#if BLUETOOTH_SD
+    sd_softdevice_disable();
+#endif
+
+    goto soft_reset;
+
     return 0;
 }
 
-void gc_collect(void) {
-    // WARNING: This gc_collect implementation doesn't try to get root
-    // pointers from CPU registers, and thus may function incorrectly.
-    void *dummy;
-    gc_collect_start();
-    gc_collect_root(&dummy, ((mp_uint_t)stack_top - (mp_uint_t)&dummy) / sizeof(mp_uint_t));
-    gc_collect_end();
-    gc_dump_info();
+#if !MICROPY_VFS
+#if MICROPY_MBFS
+// Use micro:bit filesystem
+mp_lexer_t *mp_lexer_new_from_file(const char *filename) {
+    return uos_mbfs_new_reader(filename);
 }
 
+mp_import_stat_t mp_import_stat(const char *path) {
+    return uos_mbfs_import_stat(path);
+}
+
+STATIC mp_obj_t mp_builtin_open(size_t n_args, const mp_obj_t *args) {
+    return uos_mbfs_open(n_args, args);
+}
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mp_builtin_open_obj, 1, 2, mp_builtin_open);
+
+#else
+// use dummy functions - no filesystem available
 mp_lexer_t *mp_lexer_new_from_file(const char *filename) {
     mp_raise_OSError(MP_ENOENT);
 }
@@ -78,181 +296,44 @@ mp_import_stat_t mp_import_stat(const char *path) {
     return MP_IMPORT_STAT_NO_EXIST;
 }
 
-mp_obj_t mp_builtin_open(size_t n_args, const mp_obj_t *args, mp_map_t *kwargs) {
-    return mp_const_none;
+STATIC mp_obj_t mp_builtin_open(size_t n_args, const mp_obj_t *args, mp_map_t *kwargs) {
+    mp_raise_OSError(MP_EPERM);
 }
 MP_DEFINE_CONST_FUN_OBJ_KW(mp_builtin_open_obj, 1, mp_builtin_open);
+#endif
+#endif
 
-void nlr_jump_fail(void *val) {
-    while (1);
+
+void HardFault_Handler(void)
+{
+#if defined(NRF52_SERIES) || defined(NRF91_SERIES)
+    static volatile uint32_t reg;
+    static volatile uint32_t reg2;
+    static volatile uint32_t bfar;
+    reg = SCB->HFSR;
+    reg2 = SCB->CFSR;
+    bfar = SCB->BFAR;
+    for (int i = 0; i < 0; i++) {
+        (void)reg;
+        (void)reg2;
+        (void)bfar;
+    }
+#endif
 }
 
 void NORETURN __fatal_error(const char *msg) {
     while (1);
 }
 
-#ifndef NDEBUG
+void nlr_jump_fail(void *val) {
+    printf("FATAL: uncaught exception %p\n", val);
+    mp_obj_print_exception(&mp_plat_print, (mp_obj_t)val);
+    __fatal_error("");
+}
+
 void MP_WEAK __assert_func(const char *file, int line, const char *func, const char *expr) {
     printf("Assertion '%s' failed, at file %s:%d\n", expr, file, line);
     __fatal_error("Assertion failed");
 }
-#endif
 
-#if MICROPY_MIN_USE_CORTEX_CPU
-
-// this is a minimal IRQ and reset framework for any Cortex-M CPU
-
-extern uint32_t _estack, _sidata, _sdata, _edata, _sbss, _ebss;
-
-void Reset_Handler(void) __attribute__((naked));
-void Reset_Handler(void) {
-    // set stack pointer
-    __asm volatile ("ldr sp, =_estack");
-    // copy .data section from flash to RAM
-    for (uint32_t *src = &_sidata, *dest = &_sdata; dest < &_edata;) {
-        *dest++ = *src++;
-    }
-    // zero out .bss section
-    for (uint32_t *dest = &_sbss; dest < &_ebss;) {
-        *dest++ = 0;
-    }
-    // jump to board initialisation
-    void _start(void);
-    _start();
-}
-
-void Default_Handler(void) {
-    for (;;) {
-    }
-}
-
-const uint32_t isr_vector[] __attribute__((section(".isr_vector"))) = {
-    (uint32_t)&_estack,
-    (uint32_t)&Reset_Handler,
-    (uint32_t)&Default_Handler, // NMI_Handler
-    (uint32_t)&Default_Handler, // HardFault_Handler
-    (uint32_t)&Default_Handler, // MemManage_Handler
-    (uint32_t)&Default_Handler, // BusFault_Handler
-    (uint32_t)&Default_Handler, // UsageFault_Handler
-    0,
-    0,
-    0,
-    0,
-    (uint32_t)&Default_Handler, // SVC_Handler
-    (uint32_t)&Default_Handler, // DebugMon_Handler
-    0,
-    (uint32_t)&Default_Handler, // PendSV_Handler
-    (uint32_t)&Default_Handler, // SysTick_Handler
-};
-
-void _start(void) {
-    // when we get here: stack is initialised, bss is clear, data is copied
-
-    // SCB->CCR: enable 8-byte stack alignment for IRQ handlers, in accord with EABI
-    *((volatile uint32_t*)0xe000ed14) |= 1 << 9;
-
-    // initialise the cpu and peripherals
-    #if MICROPY_MIN_USE_STM32_MCU
-    void stm32_init(void);
-    stm32_init();
-    #endif
-
-    // now that we have a basic system up and running we can call main
-    main(0, NULL);
-
-    // we must not return
-    for (;;) {
-    }
-}
-
-#endif
-
-#if MICROPY_MIN_USE_STM32_MCU
-
-// this is minimal set-up code for an STM32 MCU
-
-typedef struct {
-    volatile uint32_t CR;
-    volatile uint32_t PLLCFGR;
-    volatile uint32_t CFGR;
-    volatile uint32_t CIR;
-    uint32_t _1[8];
-    volatile uint32_t AHB1ENR;
-    volatile uint32_t AHB2ENR;
-    volatile uint32_t AHB3ENR;
-    uint32_t _2;
-    volatile uint32_t APB1ENR;
-    volatile uint32_t APB2ENR;
-} periph_rcc_t;
-
-typedef struct {
-    volatile uint32_t MODER;
-    volatile uint32_t OTYPER;
-    volatile uint32_t OSPEEDR;
-    volatile uint32_t PUPDR;
-    volatile uint32_t IDR;
-    volatile uint32_t ODR;
-    volatile uint16_t BSRRL;
-    volatile uint16_t BSRRH;
-    volatile uint32_t LCKR;
-    volatile uint32_t AFR[2];
-} periph_gpio_t;
-
-typedef struct {
-    volatile uint32_t SR;
-    volatile uint32_t DR;
-    volatile uint32_t BRR;
-    volatile uint32_t CR1;
-} periph_uart_t;
-
-#define USART1 ((periph_uart_t*) 0x40011000)
-#define GPIOA  ((periph_gpio_t*) 0x40020000)
-#define GPIOB  ((periph_gpio_t*) 0x40020400)
-#define RCC    ((periph_rcc_t*)  0x40023800)
-
-// simple GPIO interface
-#define GPIO_MODE_IN (0)
-#define GPIO_MODE_OUT (1)
-#define GPIO_MODE_ALT (2)
-#define GPIO_PULL_NONE (0)
-#define GPIO_PULL_UP (0)
-#define GPIO_PULL_DOWN (1)
-void gpio_init(periph_gpio_t *gpio, int pin, int mode, int pull, int alt) {
-    gpio->MODER = (gpio->MODER & ~(3 << (2 * pin))) | (mode << (2 * pin));
-    // OTYPER is left as default push-pull
-    // OSPEEDR is left as default low speed
-    gpio->PUPDR = (gpio->PUPDR & ~(3 << (2 * pin))) | (pull << (2 * pin));
-    gpio->AFR[pin >> 3] = (gpio->AFR[pin >> 3] & ~(15 << (4 * (pin & 7)))) | (alt << (4 * (pin & 7)));
-}
-#define gpio_get(gpio, pin) ((gpio->IDR >> (pin)) & 1)
-#define gpio_set(gpio, pin, value) do { gpio->ODR = (gpio->ODR & ~(1 << (pin))) | (value << pin); } while (0)
-#define gpio_low(gpio, pin) do { gpio->BSRRH = (1 << (pin)); } while (0)
-#define gpio_high(gpio, pin) do { gpio->BSRRL = (1 << (pin)); } while (0)
-
-void stm32_init(void) {
-    // basic MCU config
-    RCC->CR |= (uint32_t)0x00000001; // set HSION
-    RCC->CFGR = 0x00000000; // reset all
-    RCC->CR &= (uint32_t)0xfef6ffff; // reset HSEON, CSSON, PLLON
-    RCC->PLLCFGR = 0x24003010; // reset PLLCFGR
-    RCC->CR &= (uint32_t)0xfffbffff; // reset HSEBYP
-    RCC->CIR = 0x00000000; // disable IRQs
-
-    // leave the clock as-is (internal 16MHz)
-
-    // enable GPIO clocks
-    RCC->AHB1ENR |= 0x00000003; // GPIOAEN, GPIOBEN
-
-    // turn on an LED! (on pyboard it's the red one)
-    gpio_init(GPIOA, 13, GPIO_MODE_OUT, GPIO_PULL_NONE, 0);
-    gpio_high(GPIOA, 13);
-
-    // enable UART1 at 9600 baud (TX=B6, RX=B7)
-    gpio_init(GPIOB, 6, GPIO_MODE_ALT, GPIO_PULL_NONE, 7);
-    gpio_init(GPIOB, 7, GPIO_MODE_ALT, GPIO_PULL_NONE, 7);
-    RCC->APB2ENR |= 0x00000010; // USART1EN
-    USART1->BRR = (104 << 4) | 3; // 16MHz/(16*104.1875) = 9598 baud
-    USART1->CR1 = 0x0000200c; // USART enable, tx enable, rx enable
-}
-
-#endif
+void _start(void) {main(0, NULL);}
