@@ -112,10 +112,11 @@ void pin_init0(void) {
     for (int i = 0; i < NUM_OF_PINS; i++) {
         MP_STATE_PORT(pin_irq_handlers)[i] = mp_const_none;
     }
-    // Initialize GPIOTE if not done yet.
+    /* TODO// Initialize GPIOTE if not done yet.
     if (!nrfx_gpiote_is_init()) {
         nrfx_gpiote_init();
     }
+    */
 
     #if PIN_DEBUG
     pin_class_debug = false;
@@ -487,6 +488,7 @@ STATIC mp_obj_t pin_af(mp_obj_t self_in) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(pin_af_obj, pin_af);
 
 
+#ifdef TODO ////
 STATIC void pin_common_irq_handler(nrfx_gpiote_pin_t pin, nrf_gpiote_polarity_t action) {
     mp_obj_t pin_handler = MP_STATE_PORT(pin_irq_handlers)[pin];
     mp_obj_t pin_number = MP_OBJ_NEW_SMALL_INT(pin);
@@ -494,8 +496,10 @@ STATIC void pin_common_irq_handler(nrfx_gpiote_pin_t pin, nrf_gpiote_polarity_t 
 
     mp_call_function_1(pin_handler, (mp_obj_t)pin_obj);
 }
+#endif  ////TODO
 
 STATIC mp_obj_t pin_irq(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
+#ifdef TODO ////TODO GPIO Interrupt
     enum {ARG_handler, ARG_trigger, ARG_wake};
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_handler, MP_ARG_OBJ | MP_ARG_REQUIRED,  {.u_obj = mp_const_none} },
@@ -522,10 +526,12 @@ STATIC mp_obj_t pin_irq(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_ar
         nrfx_gpiote_in_uninit(pin);
         nrfx_gpiote_in_init(pin, &config, pin_common_irq_handler);
     }
+    */
 
     MP_STATE_PORT(pin_irq_handlers)[pin] = args[ARG_handler].u_obj;
 
     nrfx_gpiote_in_event_enable(pin, true);
+#endif  ////TODO
 
     // return the irq object
     return mp_const_none;
