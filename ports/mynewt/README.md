@@ -2,6 +2,16 @@
 
 This is a port of MicroPython to Mynewt for PineTime Smart Watch (nRF52). Based on the nRF and Zephyr ports.
 
+Why? So that MicroPython will support Wireless Firmware Updates over Bluetooth LE based on open-source NimBLE Bluetooth Stack, MCUBoot Bootloader and MCU Manager...
+
+1. _["MCUBoot Bootloader for PineTime Smart Watch (nRF52)"](https://lupyuen.github.io/pinetime-rust-mynewt/articles/mcuboot)_
+
+1. _["Wireless Firmware Update In Action on PineTime Smart Watch (nRF52)"](https://lupyuen.github.io/pinetime-rust-mynewt/articles/dfutest)_
+
+1. _["Firmware Update over Bluetooth Low Energy on PineTime Smart Watch"](https://lupyuen.github.io/pinetime-rust-mynewt/articles/dfu)_
+
+1. _["Configure Mynewt for SPI Flash on PineTime Smart Watch (nRF52)"](https://lupyuen.github.io/pinetime-rust-mynewt/articles/spiflash)_
+
 ## Supported Features
 
 TODO
