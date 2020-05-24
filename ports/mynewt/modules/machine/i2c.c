@@ -31,6 +31,10 @@
 #include "py/runtime.h"
 #include "py/mperrno.h"
 #include "py/mphal.h"
+#include "hal/hal_i2c.h"  //  Mynewt
+
+#define I2C_PORT    1       //  I2C Port for Mynewt
+#define I2C_TIMEOUT 1000    //  I2C Timeout in milliseconds
 
 #if MICROPY_PY_MACHINE_I2C
 
@@ -74,6 +78,7 @@ STATIC const machine_hard_i2c_obj_t machine_hard_i2c_obj[] = {
 void i2c_init0(void) {
 }
 
+#ifdef NOTUSED
 STATIC int i2c_find(mp_obj_t id) {
     // given an integer id
     int i2c_id = mp_obj_get_int(id);
@@ -82,6 +87,7 @@ STATIC int i2c_find(mp_obj_t id) {
     }
     mp_raise_ValueError("I2C doesn't exist");
 }
+#endif  //  NOTUSED
 
 STATIC void machine_hard_i2c_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {
     machine_hard_i2c_obj_t *self = self_in;
@@ -92,6 +98,16 @@ STATIC void machine_hard_i2c_print(const mp_print_t *print, mp_obj_t self_in, mp
 /* MicroPython bindings for machine API                                       */
 
 mp_obj_t machine_hard_i2c_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *all_args) {
+    struct hal_i2c_settings settings = {
+        .frequency = 400,  //  Set to the highest I2C frequency 400 Kbps
+    };
+    int rc = hal_i2c_config(I2C_PORT, &settings);
+    if (rc != 0) { mp_raise_ValueError("I2C init failed"); }
+
+    const machine_hard_i2c_obj_t *self = &machine_hard_i2c_obj[I2C_PORT];
+    return MP_OBJ_FROM_PTR(self);
+
+#ifdef NOTUSED
     enum { ARG_id, ARG_scl, ARG_sda };
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_id,       MP_ARG_REQUIRED | MP_ARG_OBJ },
@@ -117,11 +133,42 @@ mp_obj_t machine_hard_i2c_make_new(const mp_obj_type_t *type, size_t n_args, siz
 
     // Set context to this object.
     nrfx_twi_init(&self->p_twi, &config, NULL, (void *)self);
-
     return MP_OBJ_FROM_PTR(self);
+#endif  //  NOTUSED
 }
 
+/// Return 0 if no error, else return a negative MP error code.
+static int check_i2c_return_code(int rc) {
+    switch (rc) {
+        case 0: return 0;
+        case HAL_I2C_ERR_UNKNOWN:   return -MP_EIO;
+        case HAL_I2C_ERR_INVAL:     return -MP_EIO;
+        case HAL_I2C_ERR_TIMEOUT:   return -MP_ETIMEDOUT;  //  Timeout
+        case HAL_I2C_ERR_ADDR_NACK: return -MP_ENODEV;     //  Invalid address
+        case HAL_I2C_ERR_DATA_NACK: return -MP_EIO;        //  No data returned
+        default: return -MP_EIO;
+    }
+}
+
+/// Return the number of bytes transferred, or in case of error, a negative MP error code.
 int machine_hard_i2c_transfer_single(mp_obj_base_t *self_in, uint16_t addr, size_t len, uint8_t *buf, unsigned int flags) {
+    struct hal_i2c_master_data master_data = {
+        .address = addr,
+        .len = len,
+        .buffer = buf,
+    };
+    if (flags & MP_MACHINE_I2C_FLAG_READ) {  //  If reading from I2C...
+        //  1 means this is the last I2C operation. So we can terminate after this.
+        int rc_read = hal_i2c_master_read(I2C_PORT, &master_data, I2C_TIMEOUT, 1);    
+        if (rc_read != 0) { return check_i2c_return_code(rc_read); }
+    } else {  //  If writing to I2C...
+        //  1 means this is the last I2C operation. So we can terminate after this.
+        int rc_write = hal_i2c_master_write(I2C_PORT, &master_data, I2C_TIMEOUT, 1);
+        if (rc_write != 0) { return check_i2c_return_code(rc_write); }
+    }
+    return len;
+
+#ifdef NOTUSED
     machine_hard_i2c_obj_t *self = (machine_hard_i2c_obj_t *)self_in;
 
     nrfx_twi_enable(&self->p_twi);
@@ -148,6 +195,7 @@ int machine_hard_i2c_transfer_single(mp_obj_base_t *self_in, uint16_t addr, size
     nrfx_twi_disable(&self->p_twi);
 
     return transfer_ret;
+#endif  //  NOTUSED
 }
 
 STATIC const mp_machine_i2c_p_t machine_hard_i2c_p = {
