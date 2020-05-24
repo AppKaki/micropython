@@ -171,10 +171,10 @@ SRC_LIB += $(addprefix lib/,\
         libm/atan2f.c \
         )
 
-SRC_NRFX += $(addprefix lib/nrfx/drivers/src/,\
-        nrfx_uarte.c \
-        nrfx_twim.c \
-        )
+# SRC_NRFX += $(addprefix lib/nrfx/drivers/src/,\
+#         nrfx_uarte.c \
+#         nrfx_twim.c \
+#         )
 
 include drivers/secureboot/secureboot.mk
 
@@ -197,23 +197,23 @@ SRC_LIB += $(addprefix lib/,\
 endif
 
 
-SRC_NRFX += $(addprefix lib/nrfx/drivers/src/,\
-	prs/nrfx_prs.c \
-	nrfx_uart.c \
-	nrfx_adc.c \
-	nrfx_saadc.c \
-	nrfx_rng.c \
-	nrfx_twi.c \
-	nrfx_spi.c \
-	nrfx_spim.c \
-	nrfx_rtc.c \
-	nrfx_timer.c \
-	nrfx_pwm.c \
-	nrfx_gpiote.c \
-	nrfx_nvmc.c \
-	nrfx_power.c \
-	nrfx_clock.c \
-	)
+# SRC_NRFX += $(addprefix lib/nrfx/drivers/src/,\
+# 	prs/nrfx_prs.c \
+# 	nrfx_uart.c \
+# 	nrfx_adc.c \
+# 	nrfx_saadc.c \
+# 	nrfx_rng.c \
+# 	nrfx_twi.c \
+# 	nrfx_spi.c \
+# 	nrfx_spim.c \
+# 	nrfx_rtc.c \
+# 	nrfx_timer.c \
+# 	nrfx_pwm.c \
+# 	nrfx_gpiote.c \
+# 	nrfx_nvmc.c \
+# 	nrfx_power.c \
+# 	nrfx_clock.c \
+# 	)
 
 SRC_C += \
 	main.c \
