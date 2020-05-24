@@ -31,6 +31,8 @@
 #include "wdt.h"
 #include "nrfx_rtc.h"
 #include "nrf_clock.h"
+#include "hal/hal_timer.h"    //  Mynewt
+#include "console/console.h"  //  Mynewt
 
 #if MICROPY_PY_MACHINE_RTCOUNTER
 
@@ -174,6 +176,9 @@ STATIC mp_obj_t machine_rtc_make_new(const mp_obj_type_t *type, size_t n_args, s
 
     // const and non-const part of the RTC object.
     const machine_rtc_obj_t * self = &machine_rtc_obj[rtc_id];
+
+    console_printf("TODO machine_rtc_make_new\n"); console_flush(); ////
+#ifdef TODO    
     machine_rtc_config_t *config = self->config;
 
     if (args[ARG_callback].u_obj == mp_const_none) {
@@ -205,7 +210,7 @@ STATIC mp_obj_t machine_rtc_make_new(const mp_obj_type_t *type, size_t n_args, s
     // Initialize and set the correct IRQ.
     nrfx_rtc_init(self->p_rtc, &machine_rtc_config, self->handler);
     nrfx_rtc_cc_set(self->p_rtc, 0 /*channel*/, args[ARG_period].u_int, true /*enable irq*/);
-
+#endif  //  TODO
     return MP_OBJ_FROM_PTR(self);
 }
 
@@ -214,10 +219,12 @@ STATIC mp_obj_t machine_rtc_make_new(const mp_obj_type_t *type, size_t n_args, s
 /// in the configured frequency has been reached.
 ///
 STATIC mp_obj_t machine_rtc_start(mp_obj_t self_in) {
+    console_printf("TODO machine_rtc_start\n"); console_flush(); ////
+#ifdef TODO    
     machine_rtc_obj_t * self = MP_OBJ_TO_PTR(self_in);
 
     nrfx_rtc_enable(self->p_rtc);
-
+#endif  //  TODO
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(machine_rtc_start_obj, machine_rtc_start);
@@ -226,10 +233,12 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(machine_rtc_start_obj, machine_rtc_start);
 /// Stop the RTCounter.
 ///
 STATIC mp_obj_t machine_rtc_stop(mp_obj_t self_in) {
+    console_printf("TODO machine_rtc_stop\n"); console_flush(); ////
+#ifdef TODO    
     machine_rtc_obj_t * self = MP_OBJ_TO_PTR(self_in);
 
     nrfx_rtc_disable(self->p_rtc);
-
+#endif  //  TODO
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(machine_rtc_stop_obj, machine_rtc_stop);
@@ -239,11 +248,15 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(machine_rtc_stop_obj, machine_rtc_stop);
 /// with the current prescaler (2^24 / 8 = 2097152 seconds).
 ///
 STATIC mp_obj_t machine_rtc_counter(mp_obj_t self_in) {
+    console_printf("TODO machine_rtc_counter\n"); console_flush(); ////
+    uint32_t counter = os_time_get();
+    return MP_OBJ_NEW_SMALL_INT(counter); ////
+#ifdef TODO    
     machine_rtc_obj_t * self = MP_OBJ_TO_PTR(self_in);
 
     uint32_t counter = nrfx_rtc_counter_get(self->p_rtc);
-
     return MP_OBJ_NEW_SMALL_INT(counter);
+#endif  //  TODO
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(machine_rtc_counter_obj, machine_rtc_counter);
 
@@ -251,10 +264,12 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(machine_rtc_counter_obj, machine_rtc_counter);
 /// Free resources associated with this RTC.
 ///
 STATIC mp_obj_t machine_rtc_deinit(mp_obj_t self_in) {
+    console_printf("TODO machine_rtc_deinit\n"); console_flush(); ////
+#ifdef TODO    
     machine_rtc_obj_t * self = MP_OBJ_TO_PTR(self_in);
 
     nrfx_rtc_uninit(self->p_rtc);
-
+#endif  //  TODO
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(machine_rtc_deinit_obj, machine_rtc_deinit);
