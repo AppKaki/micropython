@@ -56,8 +56,51 @@ INC += -I../../lib/nrfx/hal
 INC += -I../../lib/nrfx/drivers/src/
 
 # Include folders for Mynewt. TODO: Move Mynewt as sub repo of MicroPython
-MYNEWT_DIR=../../../../pinetime-rust-mynewt/repos/apache-mynewt-core
-INC += -I$(MYNEWT_DIR)/hw/hal/include
+MYNEWT_ROOT=../../../../pinetime-rust-mynewt
+MYNEWT_CORE=$(MYNEWT_ROOT)/repos/apache-mynewt-core
+MYNEWT_NIMBLE=$(MYNEWT_ROOT)/repos/apache-mynewt-nimble
+MYNEWT_MCUBOOT=$(MYNEWT_ROOT)/repos/mcuboot
+
+INC += -I$(MYNEWT_CORE)/boot/split/include
+INC += -I$(MYNEWT_CORE)/encoding/json/include
+INC += -I$(MYNEWT_CORE)/encoding/tinycbor/include
+INC += -I$(MYNEWT_CORE)/hw/drivers/flash/spiflash/include
+INC += -I$(MYNEWT_CORE)/hw/hal/include
+INC += -I$(MYNEWT_CORE)/hw/mcu/nordic/include
+INC += -I$(MYNEWT_CORE)/hw/mcu/nordic/nrf52xxx/include
+INC += -I$(MYNEWT_CORE)/hw/mcu/nordic/src/ext/nrfx/
+INC += -I$(MYNEWT_CORE)/hw/mcu/nordic/src/ext/nrfx/mdk
+INC += -I$(MYNEWT_CORE)/hw/sensor/include
+INC += -I$(MYNEWT_CORE)/kernel/os/include
+INC += -I$(MYNEWT_CORE)/kernel/os/include/os
+INC += -I$(MYNEWT_CORE)/kernel/os/include/os/arch/cortex_m4
+INC += -I$(MYNEWT_CORE)/mgmt/imgmgr/include
+INC += -I$(MYNEWT_CORE)/mgmt/newtmgr/include
+INC += -I$(MYNEWT_CORE)/mgmt/newtmgr/transport/ble/include
+INC += -I$(MYNEWT_CORE)/net/oic/include
+INC += -I$(MYNEWT_CORE)/sys/config/include
+INC += -I$(MYNEWT_CORE)/sys/defs/include
+INC += -I$(MYNEWT_CORE)/sys/flash_map/include
+INC += -I$(MYNEWT_CORE)/sys/log/common/include
+INC += -I$(MYNEWT_CORE)/sys/log/modlog/include
+INC += -I$(MYNEWT_CORE)/sys/log/stub/include
+INC += -I$(MYNEWT_CORE)/sys/sys/include
+INC += -I$(MYNEWT_CORE)/sys/sysdown/include
+INC += -I$(MYNEWT_CORE)/sys/sysinit/include
+INC += -I$(MYNEWT_NIMBLE)/nimble/include
+INC += -I$(MYNEWT_NIMBLE)/nimble/host/include
+INC += -I$(MYNEWT_NIMBLE)/nimble/host/services/ans/include
+INC += -I$(MYNEWT_NIMBLE)/nimble/host/services/dis/include
+INC += -I$(MYNEWT_NIMBLE)/nimble/host/services/gap/include
+INC += -I$(MYNEWT_NIMBLE)/nimble/host/services/gatt/include
+INC += -I$(MYNEWT_NIMBLE)/nimble/host/store/config/include
+INC += -I$(MYNEWT_NIMBLE)/nimble/host/util/include
+INC += -I$(MYNEWT_NIMBLE)/nimble/transport
+INC += -I$(MYNEWT_NIMBLE)/porting/npl/mynewt/include
+INC += -I$(MYNEWT_MCUBOOT)/boot/bootutil/include
+
+INC += -I$(MYNEWT_ROOT)/bin/targets/nrf52_my_sensor/generated/include
+INC += -I$(MYNEWT_ROOT)/libs/semihosting_console/include
 
 MCU_VARIANT_UPPER = $(shell echo $(MCU_VARIANT) | tr '[:lower:]' '[:upper:]')
 MCU_SUB_VARIANT_UPPER = $(shell echo $(MCU_SUB_VARIANT) | tr '[:lower:]' '[:upper:]')
@@ -171,11 +214,6 @@ SRC_LIB += $(addprefix lib/,\
         libm/atan2f.c \
         )
 
-# SRC_NRFX += $(addprefix lib/nrfx/drivers/src/,\
-#         nrfx_uarte.c \
-#         nrfx_twim.c \
-#         )
-
 include drivers/secureboot/secureboot.mk
 
 endif
@@ -195,25 +233,6 @@ SRC_LIB += $(addprefix lib/,\
         oofatfs/ffunicode.c \
         )
 endif
-
-
-# SRC_NRFX += $(addprefix lib/nrfx/drivers/src/,\
-# 	prs/nrfx_prs.c \
-# 	nrfx_uart.c \
-# 	nrfx_adc.c \
-# 	nrfx_saadc.c \
-# 	nrfx_rng.c \
-# 	nrfx_twi.c \
-# 	nrfx_spi.c \
-# 	nrfx_spim.c \
-# 	nrfx_rtc.c \
-# 	nrfx_timer.c \
-# 	nrfx_pwm.c \
-# 	nrfx_gpiote.c \
-# 	nrfx_nvmc.c \
-# 	nrfx_power.c \
-# 	nrfx_clock.c \
-# 	)
 
 SRC_C += \
 	main.c \

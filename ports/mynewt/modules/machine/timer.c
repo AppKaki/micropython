@@ -28,6 +28,8 @@
 #include "py/runtime.h"
 #include "timer.h"
 #include "nrfx_timer.h"
+#include "hal/hal_timer.h"    //  Mynewt
+#include "console/console.h"  //  Mynewt
 
 #if MICROPY_PY_MACHINE_TIMER
 
@@ -41,6 +43,7 @@ typedef struct _machine_timer_obj_t {
     nrfx_timer_t   p_instance;
 } machine_timer_obj_t;
 
+#ifdef TODO
 STATIC mp_obj_t machine_timer_callbacks[] = {
     NULL,
     NULL,
@@ -50,6 +53,7 @@ STATIC mp_obj_t machine_timer_callbacks[] = {
     NULL,
 #endif
 };
+#endif  //  TODO
 
 STATIC const machine_timer_obj_t machine_timer_obj[] = {
     {{&machine_timer_type}, NRFX_TIMER_INSTANCE(0)},
@@ -66,9 +70,12 @@ STATIC const machine_timer_obj_t machine_timer_obj[] = {
 };
 
 void timer_init0(void) {
+    console_printf("TODO timer_init0\n"); console_flush(); ////
+#ifdef TODO
     for (int i = 0; i < MP_ARRAY_SIZE(machine_timer_obj); i++) {
         nrfx_timer_uninit(&machine_timer_obj[i].p_instance);
     }
+#endif  //  TODO
 }
 
 STATIC int timer_find(mp_obj_t id) {
@@ -85,6 +92,7 @@ STATIC void timer_print(const mp_print_t *print, mp_obj_t o, mp_print_kind_t kin
     mp_printf(print, "Timer(%u)", self->p_instance.instance_id);
 }
 
+#ifdef TODO
 STATIC void timer_event_handler(nrf_timer_event_t event_type, void *p_context) {
     machine_timer_obj_t *self = p_context;
     mp_obj_t callback = machine_timer_callbacks[self->p_instance.instance_id];
@@ -92,6 +100,7 @@ STATIC void timer_event_handler(nrf_timer_event_t event_type, void *p_context) {
         mp_call_function_1(callback, self);
     }
 }
+#endif  //  TODO
 
 /******************************************************************************/
 /* MicroPython bindings for machine API                                       */
@@ -126,6 +135,9 @@ STATIC mp_obj_t machine_timer_make_new(const mp_obj_type_t *type, size_t n_args,
 
     machine_timer_obj_t *self = (machine_timer_obj_t*)&machine_timer_obj[timer_id];
 
+    console_printf("TODO machine_timer_make_new\n"); console_flush(); ////
+
+#ifdef TODO
     if (mp_obj_is_fun(args[ARG_callback].u_obj)) {
         machine_timer_callbacks[timer_id] = args[ARG_callback].u_obj;
     } else if (args[ARG_callback].u_obj == mp_const_none) {
@@ -168,6 +180,7 @@ STATIC mp_obj_t machine_timer_make_new(const mp_obj_type_t *type, size_t n_args,
             args[ARG_period].u_int,
             short_mask,
             enable_interrupts);
+#endif  //  TODO
 
     return MP_OBJ_FROM_PTR(self);
 }
@@ -176,11 +189,13 @@ STATIC mp_obj_t machine_timer_make_new(const mp_obj_type_t *type, size_t n_args,
 /// Return counter value, which is currently in us.
 ///
 STATIC mp_obj_t machine_timer_period(mp_obj_t self_in) {
+    console_printf("TODO machine_timer_period\n"); console_flush(); ////
+    return MP_OBJ_NEW_SMALL_INT(1000); ////  TODO
+#ifdef TODO
     machine_timer_obj_t * self = MP_OBJ_TO_PTR(self_in);
-
     uint32_t period = nrfx_timer_capture(&self->p_instance, NRF_TIMER_CC_CHANNEL1);
-
     return MP_OBJ_NEW_SMALL_INT(period);
+#endif  //  TODO
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(machine_timer_period_obj, machine_timer_period);
 
@@ -188,9 +203,11 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(machine_timer_period_obj, machine_timer_period)
 /// Start the timer.
 ///
 STATIC mp_obj_t machine_timer_start(mp_obj_t self_in) {
+    console_printf("TODO machine_timer_start\n"); console_flush(); ////
+#ifdef TODO
     machine_timer_obj_t * self = MP_OBJ_TO_PTR(self_in);
-
     nrfx_timer_enable(&self->p_instance);
+#endif  //  TODO
 
     return mp_const_none;
 }
@@ -200,9 +217,11 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(machine_timer_start_obj, machine_timer_start);
 /// Stop the timer.
 ///
 STATIC mp_obj_t machine_timer_stop(mp_obj_t self_in) {
+    console_printf("TODO machine_timer_stop\n"); console_flush(); ////
+#ifdef TODO
     machine_timer_obj_t * self = MP_OBJ_TO_PTR(self_in);
-
     nrfx_timer_disable(&self->p_instance);
+#endif  //  TODO
 
     return mp_const_none;
 }
@@ -212,9 +231,11 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(machine_timer_stop_obj, machine_timer_stop);
 /// Free resources associated with the timer.
 ///
 STATIC mp_obj_t machine_timer_deinit(mp_obj_t self_in) {
+    console_printf("TODO machine_timer_deinit\n"); console_flush(); ////
+#ifdef TODO
     machine_timer_obj_t * self = MP_OBJ_TO_PTR(self_in);
-
     nrfx_timer_uninit(&self->p_instance);
+#endif  //  TODO
 
     return mp_const_none;
 }
