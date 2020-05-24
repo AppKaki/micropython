@@ -39,11 +39,14 @@
 #include "pin.h"
 #include "genhdr/pins.h"
 #include "spi.h"
+#include <hal/hal_spi.h>  //  Mynewt
 #if NRFX_SPI_ENABLED
 #include "nrfx_spi.h"
 #else
 #include "nrfx_spim.h"
 #endif
+
+#define SPI_PORT   0  //  Mynewt SPI port 0
 
 /// \moduleref machine
 /// \class SPI - a master-driven serial protocol
@@ -152,14 +155,11 @@ STATIC int spi_find(mp_obj_t id) {
 }
 
 void spi_transfer(const machine_hard_spi_obj_t * self, size_t len, const void * src, void * dest) {
-    nrfx_spi_xfer_desc_t xfer_desc = {
-        .p_tx_buffer = src,
-        .tx_length   = len,
-        .p_rx_buffer = dest,
-        .rx_length   = len
-    };
-
-    nrfx_spi_xfer(self->p_spi, &xfer_desc, 0);
+    int rc = hal_spi_txrx(SPI_PORT, 
+        (void *) src,   //  TX Buffer
+        dest,           //  RX Buffer
+        len);           //  Length
+    if (rc != 0) { mp_raise_ValueError("SPI TX failed"); }
 }
 
 /******************************************************************************/
@@ -309,7 +309,7 @@ STATIC mp_obj_t machine_hard_spi_make_new(mp_arg_val_t *args) {
 }
 
 STATIC void machine_hard_spi_init(mp_obj_t self_in, mp_arg_val_t *args) {
-
+#ifdef NOTUSED  //  Assume that Mynewt as initialised SPI port at startup
     const machine_hard_spi_obj_t *self = MP_OBJ_TO_PTR(self_in);
 
     int baudrate = args[ARG_INIT_baudrate].u_int;
@@ -370,11 +370,14 @@ STATIC void machine_hard_spi_init(mp_obj_t self_in, mp_arg_val_t *args) {
         // Initialize again.
         nrfx_spi_init(self->p_spi, self->p_config, NULL, (void *)self);
     }
+#endif  //  NOTUSED
 }
 
 STATIC void machine_hard_spi_deinit(mp_obj_t self_in) {
+#ifdef NOTUSED  //  Assume that SPI port will always be on
     const machine_hard_spi_obj_t *self = MP_OBJ_TO_PTR(self_in);
     nrfx_spi_uninit(self->p_spi);
+#endif  //  NOTUSED
 }
 
 STATIC void machine_hard_spi_transfer(mp_obj_base_t *self_in, size_t len, const uint8_t *src, uint8_t *dest) {
