@@ -1,11 +1,9 @@
 #ifndef __MP_MYNEWT_HAL
 #define __MP_MYNEWT_HAL
 
+#include "hal/hal_gpio.h"  //  Mynewt
 #include "py/mpconfig.h"
-////#include <nrfx.h>
 #include "pin.h"
-////#include "nrf_gpio.h"
-////#include "nrfx_config.h"
 
 typedef enum
 {

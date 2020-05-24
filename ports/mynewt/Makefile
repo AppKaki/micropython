@@ -55,6 +55,10 @@ INC += -I../../lib/nrfx/mdk
 INC += -I../../lib/nrfx/hal
 INC += -I../../lib/nrfx/drivers/src/
 
+# Include folders for Mynewt. TODO: Move Mynewt as sub repo of MicroPython
+MYNEWT_DIR=../../../../pinetime-rust-mynewt/repos/apache-mynewt-core
+INC += -I$(MYNEWT_DIR)/hw/hal/include
+
 MCU_VARIANT_UPPER = $(shell echo $(MCU_VARIANT) | tr '[:lower:]' '[:upper:]')
 MCU_SUB_VARIANT_UPPER = $(shell echo $(MCU_SUB_VARIANT) | tr '[:lower:]' '[:upper:]')
 
