@@ -97,6 +97,7 @@ STATIC const machine_rtc_obj_t machine_rtc_obj[] = {
 
 
 STATIC void interrupt_handler(size_t instance_id) {
+#ifdef TODO ////
     int rtc_id = machine_rtc_lookup(instance_id);
     const machine_rtc_obj_t * self = &machine_rtc_obj[rtc_id];
     machine_rtc_config_t *config = self->config;
@@ -110,6 +111,7 @@ STATIC void interrupt_handler(size_t instance_id) {
         nrfx_rtc_cc_set(self->p_rtc, 0, val, true);
     }
     wdt_feed(true);
+#endif  ////  TODO
 }
 
 #if !defined(BLUETOOTH_SD)
