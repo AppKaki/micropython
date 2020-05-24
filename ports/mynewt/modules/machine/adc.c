@@ -30,6 +30,7 @@
 #include "py/nlr.h"
 #include "py/runtime.h"
 #include "py/mphal.h"
+#include "console/console.h"  //  Mynewt
 
 #if MICROPY_PY_MACHINE_ADC
 

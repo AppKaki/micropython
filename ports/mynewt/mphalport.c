@@ -34,6 +34,8 @@
 #include "uart.h"
 #include "nrfx_errors.h"
 #include "nrfx_config.h"
+#include "hal/hal_uart.h"    //  Mynewt
+#include "console/console.h"  //  Mynewt
 
 // this table converts from HAL_StatusTypeDef to POSIX errno
 const byte mp_hal_status_to_errno_table[4] = {
