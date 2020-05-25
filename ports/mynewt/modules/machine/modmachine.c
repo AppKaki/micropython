@@ -24,8 +24,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#include <stdio.h>
-
+#include "console/console.h"  //  Mynewt
 #include "modmachine.h"
 #include "py/gc.h"
 #include "py/runtime.h"
@@ -99,34 +98,47 @@ void machine_init(void) {
 STATIC mp_obj_t machine_info(mp_uint_t n_args, const mp_obj_t *args) {
     // to print info about memory
     {
-        printf("_etext=%p\n", &_etext);
-        printf("_sidata=%p\n", &_sidata);
-        printf("_sdata=%p\n", &_sdata);
-        printf("_edata=%p\n", &_edata);
-        printf("_sbss=%p\n", &_sbss);
-        printf("_ebss=%p\n", &_ebss);
-        printf("_estack=%p\n", &_estack);
-        printf("_ram_start=%p\n", &_ram_start);
-        printf("_heap_start=%p\n", &_heap_start);
-        printf("_heap_end=%p\n", &_heap_end);
-        printf("_ram_end=%p\n", &_ram_end);
+        extern void *__text;
+        extern void *__etext;
+        extern void *__exidx_start;
+        extern void *__data_start__;
+        extern void *__data_end__;
+        extern void *__bss_start__;
+        extern void *__bss_end__;
+        extern void *__stack;
+        extern void *__HeapBase;
+        extern void *__HeapLimit;
+        extern void *__StackTop;
+
+        console_printf("_stext=%p\n", &__text);
+        console_printf("_etext=%p\n", &__etext);
+        console_printf("_sidata=%p\n", &__exidx_start);
+        console_printf("_sdata=%p\n", &__data_start__);
+        console_printf("_edata=%p\n", &__data_end__);
+        console_printf("_sbss=%p\n", &__bss_start__);
+        console_printf("_ebss=%p\n", &__bss_end__);
+        console_printf("_estack=%p\n", &__stack);
+        console_printf("_ram_start=%p\n", &_ram_start);
+        console_printf("_heap_start=%p\n", &__HeapBase);
+        console_printf("_heap_end=%p\n", &__HeapLimit);
+        console_printf("_ram_end=%p\n", &__StackTop);
     }
 
     // qstr info
     {
         mp_uint_t n_pool, n_qstr, n_str_data_bytes, n_total_bytes;
         qstr_pool_info(&n_pool, &n_qstr, &n_str_data_bytes, &n_total_bytes);
-        printf("qstr:\n  n_pool=" UINT_FMT "\n  n_qstr=" UINT_FMT "\n  n_str_data_bytes=" UINT_FMT "\n  n_total_bytes=" UINT_FMT "\n", n_pool, n_qstr, n_str_data_bytes, n_total_bytes);
+        console_printf("qstr:\n  n_pool=" UINT_FMT "\n  n_qstr=" UINT_FMT "\n  n_str_data_bytes=" UINT_FMT "\n  n_total_bytes=" UINT_FMT "\n", n_pool, n_qstr, n_str_data_bytes, n_total_bytes);
     }
 
     // GC info
     {
         gc_info_t info;
         gc_info(&info);
-        printf("GC:\n");
-        printf("  " UINT_FMT " total\n", info.total);
-        printf("  " UINT_FMT " : " UINT_FMT "\n", info.used, info.free);
-        printf("  1=" UINT_FMT " 2=" UINT_FMT " m=" UINT_FMT "\n", info.num_1block, info.num_2block, info.max_block);
+        console_printf("GC:\n");
+        console_printf("  " UINT_FMT " total\n", info.total);
+        console_printf("  " UINT_FMT " : " UINT_FMT "\n", info.used, info.free);
+        console_printf("  1=" UINT_FMT " 2=" UINT_FMT " m=" UINT_FMT "\n", info.num_1block, info.num_2block, info.max_block);
     }
 
     if (n_args == 1) {
