@@ -131,8 +131,10 @@ STATIC uint8_t first_page_index;
 STATIC uint8_t last_page_index;
 // The number of useable chunks in the file system.
 STATIC uint8_t chunks_in_file_system;
+#ifdef TODO
 // Index of chunk to start searches. This is randomised to even out wear.
 STATIC uint8_t start_index;
+#endif  //  TODO
 STATIC file_chunk *file_system_chunks;
 
 // Defined by the linker
@@ -198,6 +200,7 @@ void microbit_filesystem_init(void) {
 #endif  //  TODO
 }
 
+#ifdef TODO
 STATIC void copy_page(void *dest, void *src) {
     DEBUG(("FILE DEBUG: Copying page from %lx to %lx.\r\n", (uint32_t)src, (uint32_t)dest));
     flash_page_erase((uint32_t)dest);
@@ -210,7 +213,9 @@ STATIC void copy_page(void *dest, void *src) {
         }
     }
 }
+#endif  //  TODO
 
+#ifdef TODO    
 // Move entire file system up or down one page, copying all used chunks
 // Freed chunks are not copied, so become erased.
 // There should be no erased chunks before the sweep (or it would be unnecessary)
@@ -249,7 +254,7 @@ STATIC void filesystem_sweep(void) {
     flash_write_bytes((uint32_t)end_page, (uint8_t*)&config, sizeof(config));
     microbit_filesystem_init();
 }
-
+#endif  //  TODO
 
 STATIC inline byte *seek_address(file_descriptor_obj *self) {
     return (byte*)&(file_system_chunks[self->seek_chunk].data[self->seek_offset]);
@@ -271,6 +276,7 @@ STATIC uint8_t microbit_find_file(const char *name, int name_len) {
     return FILE_NOT_FOUND;
 }
 
+#ifdef TODO    
 // Return a free, erased chunk.
 // Search the chunks:
 // 1  If an UNUSED chunk is found, then return that.
@@ -326,22 +332,31 @@ STATIC uint8_t find_chunk_and_erase(void) {
     // This is guaranteed to succeed.
     return find_chunk_and_erase();
 }
+#endif  //  TODO
 
 STATIC mp_obj_t microbit_file_name(file_descriptor_obj *fd) {
     return mp_obj_new_str(&(file_system_chunks[fd->start_chunk].header.filename[0]), file_system_chunks[fd->start_chunk].header.name_len);
 }
 
+#ifdef TODO
 STATIC file_descriptor_obj *microbit_file_descriptor_new(uint8_t start_chunk, bool write, bool binary);
+#endif  //  TODO
 
 STATIC void clear_file(uint8_t chunk) {
+    console_printf("microbit_clear_file"); console_flush(); ////
+#ifdef TODO    
     do {
         flash_write_byte((uint32_t)&(file_system_chunks[chunk].marker), FREED_CHUNK);
         DEBUG(("FILE DEBUG: Freeing chunk %d.\n", chunk));
         chunk = file_system_chunks[chunk].next_chunk;
     } while (chunk <= chunks_in_file_system);
+#endif  //  TODO
 }
 
 STATIC file_descriptor_obj *microbit_file_open(const char *name, size_t name_len, bool write, bool binary) {
+    console_printf("microbit_file_open"); console_flush(); ////
+    return NULL;
+#ifdef TODO    
     if (name_len > MAX_FILENAME_LENGTH) {
         return NULL;
     }
@@ -364,8 +379,10 @@ STATIC file_descriptor_obj *microbit_file_open(const char *name, size_t name_len
         }
     }
     return microbit_file_descriptor_new(index, write, binary);
+#endif  //  TODO
 }
 
+#ifdef TODO
 STATIC file_descriptor_obj *microbit_file_descriptor_new(uint8_t start_chunk, bool write, bool binary) {
     file_descriptor_obj *res = m_new_obj(file_descriptor_obj);
     if (binary) {
@@ -381,6 +398,7 @@ STATIC file_descriptor_obj *microbit_file_descriptor_new(uint8_t start_chunk, bo
     res->binary = binary;
     return res;
 }
+#endif  //  TODO
 
 STATIC mp_obj_t microbit_remove(mp_obj_t filename) {
     size_t name_len;
@@ -401,6 +419,8 @@ STATIC void check_file_open(file_descriptor_obj *self) {
 
 STATIC int advance(file_descriptor_obj *self, uint32_t n, bool write) {
     DEBUG(("FILE DEBUG: Advancing from chunk %d, offset %d.\r\n", self->seek_chunk, self->seek_offset));
+    console_printf("microbit_filesystem_advance"); console_flush(); ////
+#ifdef TODO    
     self->seek_offset += n;
     if (self->seek_offset == DATA_PER_CHUNK) {
         self->seek_offset = 0;
@@ -417,6 +437,7 @@ STATIC int advance(file_descriptor_obj *self, uint32_t n, bool write) {
         }
         self->seek_chunk = file_system_chunks[self->seek_chunk].next_chunk;
     }
+#endif  //  TODO
     DEBUG(("FILE DEBUG: Advanced to chunk %d, offset %d.\r\n", self->seek_chunk, self->seek_offset));
     return 0;
 }
@@ -429,6 +450,8 @@ STATIC mp_uint_t microbit_file_read(mp_obj_t obj, void *buf, mp_uint_t size, int
         return MP_STREAM_ERROR;
     }
     uint32_t bytes_read = 0;
+    console_printf("microbit_file_read"); console_flush(); ////
+#ifdef TODO    
     uint8_t *data = buf;
     while (1) {
         mp_uint_t to_read = DATA_PER_CHUNK - self->seek_offset;
@@ -448,10 +471,13 @@ STATIC mp_uint_t microbit_file_read(mp_obj_t obj, void *buf, mp_uint_t size, int
         advance(self, to_read, false);
         bytes_read += to_read;
     }
+#endif  //  TODO
     return bytes_read;
 }
 
 STATIC mp_uint_t microbit_file_write(mp_obj_t obj, const void *buf, mp_uint_t size, int *errcode) {
+    console_printf("microbit_file_write"); console_flush(); ////
+#ifdef TODO    
     file_descriptor_obj *self = (file_descriptor_obj *)obj;
     check_file_open(self);
     if (!self->writable || file_system_chunks[self->start_chunk].marker == FREED_CHUNK) {
@@ -471,14 +497,18 @@ STATIC mp_uint_t microbit_file_write(mp_obj_t obj, const void *buf, mp_uint_t si
         data += to_write;
         len -= to_write;
     }
+#endif  //  TODO
     return size;
 }
 
 STATIC void microbit_file_close(file_descriptor_obj *fd) {
+    console_printf("microbit_file_close"); console_flush(); ////
+#ifdef TODO    
     if (fd->writable) {
         flash_write_byte((uint32_t)&(file_system_chunks[fd->start_chunk].header.end_offset), fd->seek_offset);
     }
     fd->open = false;
+#endif  //  TODO
 }
 
 STATIC mp_obj_t microbit_file_list(void) {
