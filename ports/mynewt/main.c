@@ -96,9 +96,6 @@ void do_str(const char *src, mp_parse_input_kind_t input_kind) {
     }
 }
 
-extern uint32_t _heap_start;
-extern uint32_t _heap_end;
-
 int start_micropython(void) {
 #ifdef TODO
 soft_reset:
@@ -112,11 +109,13 @@ soft_reset:
 
     led_state(1, 1); // MICROPY_HW_LED_1 aka MICROPY_HW_LED_RED
 
+#ifdef TODO
     mp_stack_set_top(&_ram_end);
 
     // Stack limit should be less than real stack size, so we have a chance
     // to recover from limit hit.  (Limit is measured in bytes.)
     mp_stack_set_limit((char*)&_ram_end - (char*)&_heap_end - 400);
+#endif  //  TODO
 
     machine_init();
 
