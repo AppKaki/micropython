@@ -226,7 +226,6 @@ include drivers/secureboot/secureboot.mk
 endif
 
 SRC_LIB += $(addprefix lib/,\
-	libc/string0.c \
 	mp-readline/readline.c \
 	utils/pyexec.c \
 	utils/sys_stdio_mphal.c \

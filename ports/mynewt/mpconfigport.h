@@ -113,6 +113,9 @@
 #define MICROPY_PY_MACHINE_SPI_MIN_DELAY (0)
 #define MICROPY_PY_FRAMEBUF         (0)
 
+//  Don't use MicroPython's printf()
+#define MICROPY_USE_INTERNAL_PRINTF (0)
+
 #ifndef MICROPY_HW_LED_COUNT
 #define MICROPY_HW_LED_COUNT        (0)
 #endif
