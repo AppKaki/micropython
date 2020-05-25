@@ -28,6 +28,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include "console/console.h"  //  Mynewt
 
 #include "py/nlr.h"
 #include "py/mperrno.h"
@@ -98,9 +99,10 @@ void do_str(const char *src, mp_parse_input_kind_t input_kind) {
 extern uint32_t _heap_start;
 extern uint32_t _heap_end;
 
-int micropython_main(int argc, char **argv) {
-
+int start_micropython(void) {
+#ifdef TODO
 soft_reset:
+#endif  //  TODO
 
 #if MICROPY_PY_MACHINE_WDT
     wdt_init();
@@ -209,7 +211,6 @@ pin_init0();
 
     // Main script is finished, so now go into REPL mode.
     // The REPL mode can change, or it can request a soft reset.
-    int ret_code = 0;
 
 #if MICROPY_PY_BLE_NUS
     ble_uart_init0();
@@ -244,6 +245,9 @@ led_state(1, 0);
     usb_cdc_init();
 #endif
 
+    console_printf("begin REPL\n"); console_flush(); ////
+#ifdef TODO  //  Run REPL
+    int ret_code = 0;
     for (;;) {
         if (pyexec_mode_kind == PYEXEC_MODE_RAW_REPL) {
             if (pyexec_raw_repl() != 0) {
@@ -256,7 +260,9 @@ led_state(1, 0);
             }
         }
     }
+#endif  //  TODO
 
+#ifdef TODO  //  Don't terminate yet, continue to Mynewt event loop
     mp_deinit();
 
     printf("MPY: soft reboot\n");
@@ -266,7 +272,7 @@ led_state(1, 0);
 #endif
 
     goto soft_reset;
-
+#endif  //  TODO
     return 0;
 }
 
