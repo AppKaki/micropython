@@ -161,6 +161,7 @@ soft_reset:
 #endif
 
 #if (MICROPY_PY_BLE_NUS == 0) && (MICROPY_HW_USB_CDC == 0)
+#ifdef TODO  //  Need to fix BLE UART
     {
         mp_obj_t args[2] = {
             MP_OBJ_NEW_SMALL_INT(0),
@@ -168,6 +169,7 @@ soft_reset:
         };
         MP_STATE_PORT(board_stdio_uart) = machine_hard_uart_type.make_new((mp_obj_t)&machine_hard_uart_type, MP_ARRAY_SIZE(args), 0, args);
     }
+#endif  //  TODO
 #endif
 
 pin_init0();
