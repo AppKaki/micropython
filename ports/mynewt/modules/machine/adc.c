@@ -73,13 +73,17 @@ STATIC const machine_adc_obj_t machine_adc_obj[] = {
 };
 
 #if defined(NRF52_SERIES)
+#ifdef TODO
 STATIC void saadc_event_handler(nrfx_saadc_evt_t const * p_event) {
     (void)p_event;
 }
+#endif  //  TODO
 #endif
 
 void adc_init0(void) {
 #if defined(NRF52_SERIES)
+    console_printf("TODO adc_init0\n"); console_flush(); ////
+#ifdef TODO    
     const nrfx_saadc_config_t config = {
         .resolution         = NRF_SAADC_RESOLUTION_8BIT,
         .oversample         = NRF_SAADC_OVERSAMPLE_DISABLED,
@@ -88,6 +92,7 @@ void adc_init0(void) {
     };
 
     nrfx_saadc_init(&config, saadc_event_handler);
+#endif  //  TODO
 #endif
 }
 
@@ -139,6 +144,8 @@ STATIC mp_obj_t machine_adc_make_new(const mp_obj_type_t *type, size_t n_args, s
     const machine_adc_obj_t *self = &machine_adc_obj[adc_id];
 
 #if defined(NRF52_SERIES)
+    console_printf("TODO machine_adc_make_new\n"); console_flush(); ////
+#ifdef TODO    
     const nrf_saadc_channel_config_t config = {
         .resistor_p = NRF_SAADC_RESISTOR_DISABLED,
         .resistor_n = NRF_SAADC_RESISTOR_DISABLED,
@@ -152,6 +159,7 @@ STATIC mp_obj_t machine_adc_make_new(const mp_obj_type_t *type, size_t n_args, s
     };
 
     nrfx_saadc_channel_init(self->id, &config);
+#endif  //  TODO
 #endif
 
     return MP_OBJ_FROM_PTR(self);
@@ -174,7 +182,10 @@ int16_t machine_adc_value_read(machine_adc_obj_t * adc_obj) {
 #else // NRF52
     nrf_saadc_value_t value = 0;
 
+    console_printf("TODO machine_adc_value_read\n"); console_flush(); ////
+#ifdef TODO    
     nrfx_saadc_sample_convert(adc_obj->id, &value);
+#endif  //  TODO
 #endif
     return value;
 }
@@ -262,6 +273,8 @@ mp_obj_t machine_adc_battery_level(void) {
 #else // NRF52
     nrf_saadc_value_t value = 0;
 
+    console_printf("TODO machine_adc_battery_level\n"); console_flush(); ////
+#ifdef TODO    
     const nrf_saadc_channel_config_t config = {
         .resistor_p = NRF_SAADC_RESISTOR_DISABLED,
         .resistor_n = NRF_SAADC_RESISTOR_DISABLED,
@@ -276,6 +289,7 @@ mp_obj_t machine_adc_battery_level(void) {
 
     nrfx_saadc_channel_init(0, &config);
     nrfx_saadc_sample_convert(0, &value);
+#endif  //  TODO
 #endif
 
     uint16_t batt_lvl_in_milli_volts = BATTERY_MILLIVOLT(value) + DIODE_VOLT_DROP_MILLIVOLT;

@@ -36,6 +36,7 @@
 #include "pin.h"
 #include "nrf_gpio.h"
 #include "nrfx_gpiote.h"
+#include "console/console.h"  //  Mynewt
 
 extern const pin_obj_t machine_board_pin_obj[];
 extern const uint8_t machine_pin_num_of_board_pins;
@@ -112,11 +113,11 @@ void pin_init0(void) {
     for (int i = 0; i < NUM_OF_PINS; i++) {
         MP_STATE_PORT(pin_irq_handlers)[i] = mp_const_none;
     }
-    /* TODO// Initialize GPIOTE if not done yet.
+#ifdef TODO  // Initialize GPIOTE if not done yet.
     if (!nrfx_gpiote_is_init()) {
         nrfx_gpiote_init();
     }
-    */
+#endif  //  TODO
 
     #if PIN_DEBUG
     pin_class_debug = false;
@@ -499,7 +500,6 @@ STATIC void pin_common_irq_handler(nrfx_gpiote_pin_t pin, nrf_gpiote_polarity_t 
 #endif  ////TODO
 
 STATIC mp_obj_t pin_irq(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
-#ifdef TODO ////TODO GPIO Interrupt
     enum {ARG_handler, ARG_trigger, ARG_wake};
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_handler, MP_ARG_OBJ | MP_ARG_REQUIRED,  {.u_obj = mp_const_none} },
@@ -509,7 +509,9 @@ STATIC mp_obj_t pin_irq(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_ar
     pin_obj_t *self = MP_OBJ_TO_PTR(pos_args[0]);
     mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
     mp_arg_parse_all(n_args - 1, pos_args + 1, kw_args, MP_ARRAY_SIZE(allowed_args), allowed_args, args);
-
+    
+    console_printf("pin_irq %d\n", self->pin); console_flush();
+#ifdef TODO ////TODO GPIO Interrupt
     nrfx_gpiote_pin_t pin = self->pin;
 
     nrfx_gpiote_in_config_t config = NRFX_GPIOTE_CONFIG_IN_SENSE_TOGGLE(true);

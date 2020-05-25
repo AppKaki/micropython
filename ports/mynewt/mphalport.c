@@ -58,41 +58,53 @@ void mp_hal_set_interrupt_char(int c) {
 #if !MICROPY_PY_BLE_NUS
 uintptr_t mp_hal_stdio_poll(uintptr_t poll_flags) {
     uintptr_t ret = 0;
+#ifdef TODO
     if ((poll_flags & MP_STREAM_POLL_RD) && MP_STATE_PORT(board_stdio_uart) != NULL
         && uart_rx_any(MP_STATE_PORT(board_stdio_uart))) {
         ret |= MP_STREAM_POLL_RD;
     }
+#endif  //  TODO
     return ret;
 }
 #endif
 
 #if !MICROPY_PY_BLE_NUS && !MICROPY_HW_USB_CDC
 int mp_hal_stdin_rx_chr(void) {
+#ifdef TODO
     for (;;) {
         if (MP_STATE_PORT(board_stdio_uart) != NULL && uart_rx_any(MP_STATE_PORT(board_stdio_uart))) {
             return uart_rx_char(MP_STATE_PORT(board_stdio_uart));
         }
         __WFI();
     }
-
+#endif  //  TODO
     return 0;
 }
 
 void mp_hal_stdout_tx_strn(const char *str, mp_uint_t len) {
+    console_buffer(str, len); console_flush(); ////
+#ifdef TODO
     if (MP_STATE_PORT(board_stdio_uart) != NULL) {
         uart_tx_strn(MP_STATE_PORT(board_stdio_uart), str, len);
     }
+#endif  //  TODO
 }
 
 void mp_hal_stdout_tx_strn_cooked(const char *str, mp_uint_t len) {
+    console_buffer(str, len); console_flush(); ////
+#ifdef TODO
     if (MP_STATE_PORT(board_stdio_uart) != NULL) {
         uart_tx_strn_cooked(MP_STATE_PORT(board_stdio_uart), str, len);
     }
+#endif //  TODO
 }
 #endif
 
 void mp_hal_stdout_tx_str(const char *str) {
+    console_buffer(str, strlen(str)); console_flush(); ////
+#ifdef TODO
     mp_hal_stdout_tx_strn(str, strlen(str));
+#endif  //  TODO
 }
 
 void mp_hal_delay_us(mp_uint_t us)

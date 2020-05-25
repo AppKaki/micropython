@@ -275,6 +275,8 @@ STATIC mp_obj_t machine_hard_pwm_make_new(mp_arg_val_t *args) {
 }
 
 STATIC void machine_hard_pwm_init(mp_obj_t self_in, mp_arg_val_t *args) {
+        console_printf("TODO machine_hard_pwm_init\n"); console_flush(); ////
+#ifdef TODO    
     machine_hard_pwm_obj_t *self = self_in;
 
     nrfx_pwm_config_t config;
@@ -325,13 +327,17 @@ STATIC void machine_hard_pwm_init(mp_obj_t self_in, mp_arg_val_t *args) {
                              &pwm_sequence,
                              0, // Loop disabled.
                              0);
+#endif  //  TODO                        
 }
 
 STATIC void machine_hard_pwm_deinit(mp_obj_t self_in) {
+    console_printf("TODO machine_hard_pwm_deinit\n"); console_flush(); ////
+#ifdef TODO    
     machine_hard_pwm_obj_t *self = self_in;
     (void)self;
     nrfx_pwm_stop(self->p_pwm, true);
     nrfx_pwm_uninit(self->p_pwm);
+#endif  //  TODO
 }
 
 STATIC mp_obj_t machine_hard_pwm_freq(mp_obj_t self_in, mp_arg_val_t *args) {
