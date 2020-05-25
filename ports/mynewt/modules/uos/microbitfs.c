@@ -37,6 +37,7 @@
 #include "py/runtime.h"
 #include "extmod/vfs.h"
 #include "mpconfigport.h"
+#include "console/console.h"  //  Mynewt
 
 #if MICROPY_MBFS
 
@@ -159,6 +160,7 @@ STATIC inline void *last_page(void) {
     return _fs_end - FLASH_PAGESIZE * last_page_index;
 }
 
+#ifdef TODO
 STATIC void init_limits(void) {
     // First determine where to end
     byte *end = _fs_end;
@@ -177,8 +179,11 @@ STATIC void init_limits(void) {
 STATIC void randomise_start_index(void) {
     start_index = machine_rng_generate_random_word() % chunks_in_file_system + 1;
 }
+#endif  //  TODO
 
 void microbit_filesystem_init(void) {
+    console_printf("microbit_filesystem_init"); console_flush(); ////
+#ifdef TODO    
     init_limits();
     randomise_start_index();
     file_chunk *base = first_page();
@@ -190,6 +195,7 @@ void microbit_filesystem_init(void) {
         flash_write_byte((uint32_t)&((file_chunk *)last_page())->marker, PERSISTENT_DATA_MARKER);
         file_system_chunks = &base[-1];
     }
+#endif  //  TODO
 }
 
 STATIC void copy_page(void *dest, void *src) {
