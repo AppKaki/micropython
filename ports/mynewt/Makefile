@@ -61,6 +61,7 @@ MYNEWT_CORE=$(MYNEWT_ROOT)/repos/apache-mynewt-core
 MYNEWT_NIMBLE=$(MYNEWT_ROOT)/repos/apache-mynewt-nimble
 MYNEWT_MCUBOOT=$(MYNEWT_ROOT)/repos/mcuboot
 
+# Mynewt Core
 INC += -I$(MYNEWT_CORE)/boot/split/include
 INC += -I$(MYNEWT_CORE)/encoding/json/include
 INC += -I$(MYNEWT_CORE)/encoding/tinycbor/include
@@ -87,6 +88,8 @@ INC += -I$(MYNEWT_CORE)/sys/log/stub/include
 INC += -I$(MYNEWT_CORE)/sys/sys/include
 INC += -I$(MYNEWT_CORE)/sys/sysdown/include
 INC += -I$(MYNEWT_CORE)/sys/sysinit/include
+
+# Mynewt NimBLE Bluetooth Stack
 INC += -I$(MYNEWT_NIMBLE)/nimble/include
 INC += -I$(MYNEWT_NIMBLE)/nimble/host/include
 INC += -I$(MYNEWT_NIMBLE)/nimble/host/services/ans/include
@@ -97,8 +100,11 @@ INC += -I$(MYNEWT_NIMBLE)/nimble/host/store/config/include
 INC += -I$(MYNEWT_NIMBLE)/nimble/host/util/include
 INC += -I$(MYNEWT_NIMBLE)/nimble/transport
 INC += -I$(MYNEWT_NIMBLE)/porting/npl/mynewt/include
+
+# Mynewt MCUBoot Bootloader
 INC += -I$(MYNEWT_MCUBOOT)/boot/bootutil/include
 
+# Mynewt Custom Libraries
 INC += -I$(MYNEWT_ROOT)/bin/targets/nrf52_my_sensor/generated/include
 INC += -I$(MYNEWT_ROOT)/libs/semihosting_console/include
 
@@ -132,7 +138,8 @@ CFLAGS_MCU_m4 = $(CFLAGS_CORTEX_M) -mtune=cortex-m4 -mcpu=cortex-m4 -mfpu=fpv4-s
 
 CFLAGS_MCU_m0 = $(CFLAGS_CORTEX_M) -fshort-enums -mtune=cortex-m0 -mcpu=cortex-m0 -mfloat-abi=soft -fno-builtin
 
-LTO ?= 1
+# Disable Link Time Optimisation because we are creating a Library, not an Executable
+LTO ?= 0
 ifeq ($(LTO),1)
 CFLAGS += -flto
 else
@@ -328,13 +335,20 @@ $(filter $(PY_BUILD)/../extmod/vfs_fat_%.o, $(PY_O)): COPT += -Os
 
 .PHONY: all flash deploy sd binary hex
 
-ifeq ($(MCU_VARIANT), nrf91)
-all: binary hex secureboot
-else
-all: binary hex
-endif
+## By default, generate micropython.a library
+all: library binary
 
-OUTPUT_FILENAME = firmware
+## Output is micropython.a
+OUTPUT_FILENAME = micropython
+
+## Create .a library from .o object files
+library: $(BUILD)/$(OUTPUT_FILENAME).a
+
+$(BUILD)/$(OUTPUT_FILENAME).a: $(OBJ)
+	$(ECHO) "ARCHIVE $@"
+	$(Q)$(AR) r $@ $(OBJ)
+	$(Q)$(RANLIB) -t $@
+	$(Q)$(SIZE) $@
 
 ## Create binary .bin file from the .out file
 binary: $(BUILD)/$(OUTPUT_FILENAME).bin
@@ -348,55 +362,7 @@ hex: $(BUILD)/$(OUTPUT_FILENAME).hex
 $(BUILD)/$(OUTPUT_FILENAME).hex: $(BUILD)/$(OUTPUT_FILENAME).elf
 	$(OBJCOPY) -O ihex $< $@
 
-FLASHER ?=
-
-ifeq ($(FLASHER),)
-
-ifeq ($(MCU_VARIANT), nrf91)
-
-deploy: $(BUILD)/$(OUTPUT_FILENAME).hex $(BUILD)/secureboot.hex
-	nrfjprog --program $(BUILD)/secureboot.hex --sectorerase -f $(MCU_VARIANT)
-	nrfjprog --program $(BUILD)/$(OUTPUT_FILENAME).hex --sectorerase -f $(MCU_VARIANT)
-	nrfjprog --reset -f $(MCU_VARIANT)
-
-else
-
-deploy: $(BUILD)/$(OUTPUT_FILENAME).hex
-	nrfjprog --program $< --sectorerase -f $(MCU_VARIANT)
-	nrfjprog --reset -f $(MCU_VARIANT)
-
-endif
-
-else ifeq ($(FLASHER), pyocd)
-
-deploy: $(BUILD)/$(OUTPUT_FILENAME).hex
-	pyocd-flashtool -t $(MCU_VARIANT) $<
-
-else ifeq ($(FLASHER), idap)
-
-deploy: $(BUILD)/$(OUTPUT_FILENAME).hex
-	IDAPnRFPRog $<
-
-else ifeq ($(FLASHER), bmp)
-
-BMP_PORT ?= /dev/ttyACM0
-
-deploy: $(BUILD)/$(OUTPUT_FILENAME).elf
-	$(Q)$(GDB) \
-	    -ex 'target extended-remote $(BMP_PORT)' \
-	    -ex 'monitor tpwr enable' \
-	    -ex 'monitor swdp_scan' \
-	    -ex 'attach 1' \
-	    -ex 'set mem inaccessible-by-default off' \
-	    -ex 'load' \
-	    -ex 'kill' \
-	    -ex 'quit' \
-	    $<
-
-endif
-
-flash: deploy
-
+## Create .elf ELF firmware image from .o object files
 $(BUILD)/$(OUTPUT_FILENAME).elf: $(OBJ)
 	$(ECHO) "LINK $@"
 	$(Q)$(CC) $(LDFLAGS) -o $@ $(OBJ) $(LIBS)
