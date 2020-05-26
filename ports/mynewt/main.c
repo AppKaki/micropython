@@ -78,7 +78,7 @@
 #endif
 
 ///  Heap space for MicroPython
-#define MICROPYTHON_HEAP_SIZE 16384
+#define MICROPYTHON_HEAP_SIZE 32768
 uint8_t micropython_heap[MICROPYTHON_HEAP_SIZE];
 
 /// Return the task named "main"
