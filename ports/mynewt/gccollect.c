@@ -26,6 +26,7 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include "console/console.h"  //  Mynewt
 
 #include "py/obj.h"
 #include "py/gc.h"
@@ -46,7 +47,9 @@ void gc_collect(void) {
 
     // trace the stack, including the registers (since they live on the stack in this function)
     extern void *__StackTop;
-    gc_collect_root((void**)sp, ((uint32_t)&__StackTop - sp) / sizeof(uint32_t));
+    uint32_t len = ((uint32_t)&__StackTop - sp) / sizeof(uint32_t);
+    console_printf("gc_collect: sp=%x, len=%lx\n", sp, len); console_flush(); ////
+    gc_collect_root((void**)sp, len);
 
     // end the GC
     gc_collect_end();

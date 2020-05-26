@@ -26,7 +26,7 @@
  */
 
 #include <stdint.h>
-#include <stdio.h>
+//#include <stdio.h>
 #include <string.h>
 #include "console/console.h"  //  Mynewt
 
@@ -85,7 +85,7 @@ void *micropython_heap_end = &micropython_heap[MICROPYTHON_HEAP_SIZE];
 void do_str(const char *src, mp_parse_input_kind_t input_kind) {
     mp_lexer_t *lex = mp_lexer_new_from_str_len(MP_QSTR__lt_stdin_gt_, src, strlen(src), 0);
     if (lex == NULL) {
-        printf("MemoryError: lexer could not allocate memory\n");
+        console_printf("MemoryError: lexer could not allocate memory\n"); console_flush();
         return;
     }
 
@@ -340,8 +340,8 @@ void NORETURN __fatal_error(const char *msg) {
 }
 
 void nlr_jump_fail(void *val) {
-    printf("FATAL: uncaught exception %p\n", val);
-    mp_obj_print_exception(&mp_plat_print, (mp_obj_t)val);
+    console_printf("FATAL: uncaught exception %p\n", val); console_flush();
+    mp_obj_print_exception(&mp_plat_print, (mp_obj_t)val); console_flush();
     __fatal_error("");
 }
 
