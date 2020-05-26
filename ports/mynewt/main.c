@@ -28,6 +28,7 @@
 #include <stdint.h>
 //#include <stdio.h>
 #include <string.h>
+#include "os/os_task.h"       //  Mynewt
 #include "console/console.h"  //  Mynewt
 
 #include "py/nlr.h"
@@ -76,11 +77,37 @@
 #include "usb_cdc.h"
 #endif
 
-//  Heap space for MicroPython
+///  Heap space for MicroPython
 #define MICROPYTHON_HEAP_SIZE 8192
 uint8_t micropython_heap[MICROPYTHON_HEAP_SIZE];
-void *micropython_heap_start = &micropython_heap[0];
-void *micropython_heap_end = &micropython_heap[MICROPYTHON_HEAP_SIZE];
+
+///  Return the stack start address for the current task in Mynewt (previously _heap_end)
+void *get_micropython_stack_start(void) {
+    //  Get the first task, which is the main task.
+    struct os_task_info task_info;
+    struct os_task *task = os_task_info_get_next(NULL, &task_info);
+    if (task == NULL) { console_printf("no task\n"); console_flush(); for (;;) {} }  //  Should never happen
+    return task->t_stacktop - task->t_stacksize;
+}
+
+///  Return the stack end address for the current task in Mynewt (previously _ram_end)
+void *get_micropython_stack_end(void) {
+    //  Get the first task, which is the main task.
+    struct os_task_info task_info;
+    struct os_task *task = os_task_info_get_next(NULL, &task_info);
+    if (task == NULL) { console_printf("no task\n"); console_flush(); for (;;) {} }  //  Should never happen
+    return task->t_stacktop;
+}
+
+///  Return the stack start address for the current task in Mynewt (previously _heap_end)
+void *get_micropython_heap_start(void) {
+    return &micropython_heap[0];
+}
+
+///  Return the stack end address for the current task in Mynewt (previously _ram_end)
+void *get_micropython_heap_end(void) {
+    return &micropython_heap[MICROPYTHON_HEAP_SIZE];
+}
 
 void do_str(const char *src, mp_parse_input_kind_t input_kind) {
     mp_lexer_t *lex = mp_lexer_new_from_str_len(MP_QSTR__lt_stdin_gt_, src, strlen(src), 0);
@@ -115,18 +142,20 @@ soft_reset:
 
     led_state(1, 1); // MICROPY_HW_LED_1 aka MICROPY_HW_LED_RED
 
-#ifdef TODO
-    mp_stack_set_top(&_ram_end);
+    // Set the top of the stack
+    void *stack_start = get_micropython_stack_start();
+    void *stack_end = get_micropython_stack_end();
+    mp_stack_set_top(stack_end);
 
     // Stack limit should be less than real stack size, so we have a chance
     // to recover from limit hit.  (Limit is measured in bytes.)
-    mp_stack_set_limit((char*)&_ram_end - (char*)&_heap_end - 400);
-#endif  //  TODO
+    // TODO: May not be applicable to Mynewt, since stack and heap are in different regions
+    mp_stack_set_limit((char*)stack_end - (char*)stack_start - 400);
 
     machine_init();
 
     //  Allocate the MicroPython heap.
-    gc_init(micropython_heap_start, micropython_heap_end);
+    gc_init(get_micropython_heap_start(), get_micropython_heap_end());
 
     mp_init();
     mp_obj_list_init(mp_sys_path, 0);

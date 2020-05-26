@@ -65,6 +65,12 @@
 
 STATIC uint32_t reset_cause;
 
+//  Defined in micropython/ports/mynewt/main.c
+void *get_micropython_stack_start(void);
+void *get_micropython_stack_end(void);
+void *get_micropython_heap_start(void);
+void *get_micropython_heap_end(void);
+
 void machine_init(void) {
     uint32_t state = NRF_POWER->RESETREAS;
     if (state & POWER_RESETREAS_RESETPIN_Msk) {
@@ -105,23 +111,19 @@ STATIC mp_obj_t machine_info(mp_uint_t n_args, const mp_obj_t *args) {
         extern void *__data_end__;
         extern void *__bss_start__;
         extern void *__bss_end__;
-        extern void *__stack;
-        extern void *__HeapBase;
-        extern void *__HeapLimit;
-        extern void *__StackTop;
 
-        console_printf("_stext=%p\n", &__text);
-        console_printf("_etext=%p\n", &__etext);
-        console_printf("_sidata=%p\n", &__exidx_start);
-        console_printf("_sdata=%p\n", &__data_start__);
-        console_printf("_edata=%p\n", &__data_end__);
-        console_printf("_sbss=%p\n", &__bss_start__);
-        console_printf("_ebss=%p\n", &__bss_end__);
-        console_printf("_estack=%p\n", &__stack);
-        console_printf("_ram_start=%p\n", &_ram_start);
-        console_printf("_heap_start=%p\n", &__HeapBase);
-        console_printf("_heap_end=%p\n", &__HeapLimit);
-        console_printf("_ram_end=%p\n", &__StackTop);
+        console_printf("_stext=%p\n",       &__text);
+        console_printf("_etext=%p\n",       &__etext);
+        console_printf("_sidata=%p\n",      &__exidx_start);
+        console_printf("_sdata=%p\n",       &__data_start__);
+        console_printf("_edata=%p\n",       &__data_end__);
+        console_printf("_sbss=%p\n",        &__bss_start__);
+        console_printf("_ebss=%p\n",        &__bss_end__);
+        console_printf("_ram_start=%p\n",   &_ram_start);
+        console_printf("heap_start=%lx\n",   (uint32_t) get_micropython_heap_start());
+        console_printf("heap_end=%lx\n",     (uint32_t) get_micropython_heap_end());
+        console_printf("stack_start=%lx\n",  (uint32_t) get_micropython_stack_start());
+        console_printf("stack_end=%lx\n",    (uint32_t) get_micropython_stack_end());
     }
 
     // qstr info

@@ -32,6 +32,9 @@
 #include "py/gc.h"
 #include "gccollect.h"
 
+//  Defined in micropython/ports/mynewt/main.c
+void *get_micropython_stack_end(void);
+
 static inline uintptr_t get_sp(void) {
     uintptr_t result;
     __asm__ ("mov %0, sp\n" : "=r" (result) );
@@ -45,9 +48,8 @@ void gc_collect(void) {
     // Get stack pointer
     uintptr_t sp = get_sp();
 
-    // trace the stack, including the registers (since they live on the stack in this function)
-    extern void *__StackTop;
-    uint32_t len = ((uint32_t)&__StackTop - sp) / sizeof(uint32_t);
+    // trace the stack from the current stack pointer to the base of the stack, including the registers (since they live on the stack in this function)
+    uint32_t len = ((uint32_t) get_micropython_stack_end() - sp) / sizeof(uint32_t);
     console_printf("gc_collect: sp=%x, len=%lx\n", sp, len); console_flush(); ////
     gc_collect_root((void**)sp, len);
 
