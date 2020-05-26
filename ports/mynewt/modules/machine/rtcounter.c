@@ -250,7 +250,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(machine_rtc_stop_obj, machine_rtc_stop);
 /// with the current prescaler (2^24 / 8 = 2097152 seconds).
 ///
 STATIC mp_obj_t machine_rtc_counter(mp_obj_t self_in) {
-    console_printf("TODO machine_rtc_counter\n"); console_flush(); ////
+    //// console_printf("TODO machine_rtc_counter\n"); console_flush(); ////
     uint32_t counter = os_time_get();
     return MP_OBJ_NEW_SMALL_INT(counter); ////
 #ifdef TODO    
