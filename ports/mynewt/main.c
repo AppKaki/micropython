@@ -97,7 +97,7 @@ void *get_micropython_stack_start(void) {
     //  Get the first task, which is the main task.
     struct os_task_info task_info;
     struct os_task *task = get_main_task(&task_info);
-    void *stack_start = task->t_stacktop - 4 * task->t_stacksize;
+    void *stack_start = (void *) (((uint32_t) task->t_stacktop) - (4 * task->t_stacksize));
     console_printf("stack_start: %lx\n", (uint32_t) stack_start); console_flush(); ////
     return stack_start;
 }
