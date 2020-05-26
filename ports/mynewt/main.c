@@ -78,7 +78,7 @@
 #endif
 
 ///  Heap space for MicroPython
-#define MICROPYTHON_HEAP_SIZE 8192
+#define MICROPYTHON_HEAP_SIZE 16384
 uint8_t micropython_heap[MICROPYTHON_HEAP_SIZE];
 
 /// Return the task named "main"
@@ -166,8 +166,9 @@ soft_reset:
 
     // Stack limit should be less than real stack size, so we have a chance
     // to recover from limit hit.  (Limit is measured in bytes.)
+    // mp_stack_set_limit((char*)stack_end - (char*)stack_start - 400);
     // TODO: May not be applicable to Mynewt, since stack and heap are in different regions
-    mp_stack_set_limit((char*)stack_end - (char*)stack_start - 400);
+    mp_stack_set_limit((char*)stack_end - (char*)stack_start);
 
     machine_init();
 
