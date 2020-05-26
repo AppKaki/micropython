@@ -76,6 +76,12 @@
 #include "usb_cdc.h"
 #endif
 
+//  Heap space for MicroPython
+#define MICROPYTHON_HEAP_SIZE 8192
+uint8_t micropython_heap[MICROPYTHON_HEAP_SIZE];
+void *micropython_heap_start = &micropython_heap[0];
+void *micropython_heap_end = &micropython_heap[MICROPYTHON_HEAP_SIZE];
+
 void do_str(const char *src, mp_parse_input_kind_t input_kind) {
     mp_lexer_t *lex = mp_lexer_new_from_str_len(MP_QSTR__lt_stdin_gt_, src, strlen(src), 0);
     if (lex == NULL) {
@@ -119,7 +125,8 @@ soft_reset:
 
     machine_init();
 
-    gc_init(&_heap_start, &_heap_end);
+    //  Allocate the MicroPython heap.
+    gc_init(micropython_heap_start, micropython_heap_end);
 
     mp_init();
     mp_obj_list_init(mp_sys_path, 0);

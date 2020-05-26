@@ -1,4 +1,4 @@
-/* define output sections */
+/* NOTUSED for Mynewt. define output sections */
 SECTIONS
 {
     /* The program code and other data goes into FLASH */

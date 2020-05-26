@@ -1,4 +1,4 @@
-
+/* NOTUSED for Mynewt */
 /* Flash layout: softdevice     | application     | filesystem */
 /* RAM layout:   softdevice RAM | application RAM */
 
