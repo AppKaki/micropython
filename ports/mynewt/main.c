@@ -81,36 +81,44 @@
 #define MICROPYTHON_HEAP_SIZE 8192
 uint8_t micropython_heap[MICROPYTHON_HEAP_SIZE];
 
-///  Return the stack start address for the current task in Mynewt (previously _heap_end)
+/// Return the task named "main"
+static struct os_task *get_main_task(struct os_task_info *task_info) {
+    for (;;) {
+        struct os_task *task = os_task_info_get_next(NULL, task_info);
+        if (task == NULL) { console_printf("no main task\n"); console_flush(); for (;;) {} }  //  Should never happen
+        if (strcmp(task->t_name, "main") == 0) { return task; }
+    }
+    return NULL;  //  Never comes here
+}
+
+/// Return the stack start address for the main task in Mynewt (previously _heap_end)
 void *get_micropython_stack_start(void) {
     //  Get the first task, which is the main task.
     struct os_task_info task_info;
-    struct os_task *task = os_task_info_get_next(NULL, &task_info);
-    if (task == NULL) { console_printf("no task\n"); console_flush(); for (;;) {} }  //  Should never happen
-    void *stack_start = task->t_stacktop - task->t_stacksize;
+    struct os_task *task = get_main_task(&task_info);
+    void *stack_start = task->t_stacktop - 4 * task->t_stacksize;
     console_printf("stack_start: %lx\n", (uint32_t) stack_start); console_flush(); ////
     return stack_start;
 }
 
-///  Return the stack end address for the current task in Mynewt (previously _ram_end)
+/// Return the stack end address for the current task in Mynewt (previously _ram_end)
 void *get_micropython_stack_end(void) {
     //  Get the first task, which is the main task.
     struct os_task_info task_info;
-    struct os_task *task = os_task_info_get_next(NULL, &task_info);
-    if (task == NULL) { console_printf("no task\n"); console_flush(); for (;;) {} }  //  Should never happen
+    struct os_task *task = get_main_task(&task_info);
     void *stack_end = task->t_stacktop;
     console_printf("stack_end: %lx\n", (uint32_t) stack_end); console_flush(); ////
     return stack_end;
 }
 
-///  Return the stack start address for the current task in Mynewt (previously _heap_end)
+/// Return the heap start address
 void *get_micropython_heap_start(void) {
     void *heap_start = &micropython_heap[0];
     console_printf("heap_start: %lx\n", (uint32_t) heap_start); console_flush(); ////
     return heap_start;
 }
 
-///  Return the stack end address for the current task in Mynewt (previously _ram_end)
+///  Return the heap end address
 void *get_micropython_heap_end(void) {
     void *heap_end = &micropython_heap[MICROPYTHON_HEAP_SIZE];
     console_printf("heap_end: %lx\n", (uint32_t) heap_end); console_flush(); ////

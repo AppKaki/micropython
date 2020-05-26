@@ -184,7 +184,7 @@ STATIC void randomise_start_index(void) {
 #endif  //  TODO
 
 void microbit_filesystem_init(void) {
-    console_printf("microbit_filesystem_init"); console_flush(); ////
+    console_printf("TODO microbit_filesystem_init\n"); console_flush(); ////
 #ifdef TODO    
     init_limits();
     randomise_start_index();
@@ -343,7 +343,7 @@ STATIC file_descriptor_obj *microbit_file_descriptor_new(uint8_t start_chunk, bo
 #endif  //  TODO
 
 STATIC void clear_file(uint8_t chunk) {
-    console_printf("microbit_clear_file"); console_flush(); ////
+    console_printf("TODO microbit_clear_file\n"); console_flush(); ////
 #ifdef TODO    
     do {
         flash_write_byte((uint32_t)&(file_system_chunks[chunk].marker), FREED_CHUNK);
@@ -354,7 +354,7 @@ STATIC void clear_file(uint8_t chunk) {
 }
 
 STATIC file_descriptor_obj *microbit_file_open(const char *name, size_t name_len, bool write, bool binary) {
-    console_printf("microbit_file_open"); console_flush(); ////
+    console_printf("TODO microbit_file_open\n"); console_flush(); ////
     return NULL;
 #ifdef TODO    
     if (name_len > MAX_FILENAME_LENGTH) {
@@ -419,7 +419,7 @@ STATIC void check_file_open(file_descriptor_obj *self) {
 
 STATIC int advance(file_descriptor_obj *self, uint32_t n, bool write) {
     DEBUG(("FILE DEBUG: Advancing from chunk %d, offset %d.\r\n", self->seek_chunk, self->seek_offset));
-    console_printf("microbit_filesystem_advance"); console_flush(); ////
+    console_printf("TODO microbit_filesystem_advance\n"); console_flush(); ////
 #ifdef TODO    
     self->seek_offset += n;
     if (self->seek_offset == DATA_PER_CHUNK) {
@@ -450,7 +450,7 @@ STATIC mp_uint_t microbit_file_read(mp_obj_t obj, void *buf, mp_uint_t size, int
         return MP_STREAM_ERROR;
     }
     uint32_t bytes_read = 0;
-    console_printf("microbit_file_read"); console_flush(); ////
+    console_printf("TODO microbit_file_read\n"); console_flush(); ////
 #ifdef TODO    
     uint8_t *data = buf;
     while (1) {
@@ -476,7 +476,7 @@ STATIC mp_uint_t microbit_file_read(mp_obj_t obj, void *buf, mp_uint_t size, int
 }
 
 STATIC mp_uint_t microbit_file_write(mp_obj_t obj, const void *buf, mp_uint_t size, int *errcode) {
-    console_printf("microbit_file_write"); console_flush(); ////
+    console_printf("TODO microbit_file_write\n"); console_flush(); ////
 #ifdef TODO    
     file_descriptor_obj *self = (file_descriptor_obj *)obj;
     check_file_open(self);
@@ -502,7 +502,7 @@ STATIC mp_uint_t microbit_file_write(mp_obj_t obj, const void *buf, mp_uint_t si
 }
 
 STATIC void microbit_file_close(file_descriptor_obj *fd) {
-    console_printf("microbit_file_close"); console_flush(); ////
+    console_printf("TODO microbit_file_close\n"); console_flush(); ////
 #ifdef TODO    
     if (fd->writable) {
         flash_write_byte((uint32_t)&(file_system_chunks[fd->start_chunk].header.end_offset), fd->seek_offset);
