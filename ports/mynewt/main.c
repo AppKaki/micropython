@@ -83,8 +83,9 @@ uint8_t micropython_heap[MICROPYTHON_HEAP_SIZE];
 
 /// Return the task named "main"
 static struct os_task *get_main_task(struct os_task_info *task_info) {
+    struct os_task *task = NULL;
     for (;;) {
-        struct os_task *task = os_task_info_get_next(NULL, task_info);
+        task = os_task_info_get_next(task, task_info);
         if (task == NULL) { console_printf("no main task\n"); console_flush(); for (;;) {} }  //  Should never happen
         if (strcmp(task->t_name, "main") == 0) { return task; }
     }
