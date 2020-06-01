@@ -335,7 +335,7 @@ $(filter $(PY_BUILD)/../extmod/vfs_fat_%.o, $(PY_O)): COPT += -Os
 .PHONY: all flash deploy sd binary hex
 
 ## By default, generate micropython.a library
-all: library binary
+all: library
 
 ## Output is micropython.a
 OUTPUT_FILENAME = micropython
